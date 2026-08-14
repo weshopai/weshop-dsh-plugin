@@ -1,6 +1,6 @@
 {
   "name": "@weshop/dsh-weshop-2-0",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "private": true,
   "description": "Native Cordis WeShop canvas, tools, skills, and Web UI for DeepSeek Harness",
   "type": "module",

@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
-  ArrowsInSimple, CornersOut, DownloadSimple, ImageSquare, MagicWand,
+  ArrowCounterClockwise, ArrowsInSimple, CornersOut, DownloadSimple, ImageSquare, MagicWand,
   CaretDown, MagnifyingGlassPlus, Minus, MusicNotes, PencilSimple, Plus,
   Sparkle, SquaresFour, TextT, Trash, UploadSimple, VideoCamera, X,
 } from "@phosphor-icons/react";
@@ -36,6 +36,32 @@ export function WeshopWorkspace({ onExit, embedded = false, initialActionCursor 
   const gesture = useRef(null);
   const fileRef = useRef(null);
   const actionCursor = useRef(initialActionCursor);
+  const itemsRef = useRef(items);
+  const historyRef = useRef([]);
+  const [undoDepth, setUndoDepth] = useState(0);
+
+  const recordUndo = (snapshot = itemsRef.current) => {
+    historyRef.current = [...historyRef.current.slice(-79), snapshot];
+    setUndoDepth(historyRef.current.length);
+  };
+  const replaceItems = (update, { record = true } = {}) => {
+    const current = itemsRef.current;
+    const next = typeof update === "function" ? update(current) : update;
+    if (next === current) return;
+    if (record) recordUndo(current);
+    itemsRef.current = next;
+    setItems(next);
+  };
+  const undo = () => {
+    const previous = historyRef.current.at(-1);
+    if (!previous) return;
+    historyRef.current = historyRef.current.slice(0, -1);
+    itemsRef.current = previous;
+    setItems(previous);
+    setSelected(null);
+    setUndoDepth(historyRef.current.length);
+    notify("已返回上一步");
+  };
 
   useEffect(() => {
     setCanvases((all) => all.map((canvas) => canvas.id === activeCanvasId ? { ...canvas, title, items, view } : canvas));
@@ -100,7 +126,7 @@ export function WeshopWorkspace({ onExit, embedded = false, initialActionCursor 
           actionCursor.current = Math.max(actionCursor.current, action.sequence || 0);
           if (action.type !== "add-asset" || (!action.payload?.url && !action.payload?.content)) continue;
           const payload = action.payload;
-          const append = (aspect = payload.aspect || 1.5) => setItems((all) => {
+          const append = (aspect = payload.aspect || 1.5) => replaceItems((all) => {
             if (all.some((item) => item.id === payload.id)) return all;
             const index = all.length;
             return [...all, {
@@ -165,7 +191,11 @@ export function WeshopWorkspace({ onExit, embedded = false, initialActionCursor 
   const openCanvas = (canvas) => {
     setActiveCanvasId(canvas.id);
     setTitle(canvas.title);
-    setItems(canvas.items || []);
+    const nextItems = canvas.items || [];
+    itemsRef.current = nextItems;
+    setItems(nextItems);
+    historyRef.current = [];
+    setUndoDepth(0);
     setView(canvas.view || { x: 0, y: 0, scale: .72 });
     setSelected(null);
     setCanvasMenuOpen(false);
@@ -218,14 +248,14 @@ export function WeshopWorkspace({ onExit, embedded = false, initialActionCursor 
   const beginDrag = (event, item) => {
     event.stopPropagation();
     setSelected(item.id);
-    gesture.current = { type: "item", id: item.id, startX: event.clientX, startY: event.clientY, x: item.x, y: item.y };
+    gesture.current = { type: "item", id: item.id, startX: event.clientX, startY: event.clientY, x: item.x, y: item.y, recorded: false };
     stageRef.current.setPointerCapture(event.pointerId);
   };
 
   const beginResize = (event, item) => {
     event.stopPropagation();
     setSelected(item.id);
-    gesture.current = { type: "resize", id: item.id, startX: event.clientX, width: item.width };
+    gesture.current = { type: "resize", id: item.id, startX: event.clientX, width: item.width, recorded: false };
     stageRef.current.setPointerCapture(event.pointerId);
   };
 
@@ -237,17 +267,21 @@ export function WeshopWorkspace({ onExit, embedded = false, initialActionCursor 
       return;
     }
     const dx = (event.clientX - current.startX) / view.scale;
+    if (!current.recorded) {
+      recordUndo();
+      current.recorded = true;
+    }
     if (current.type === "resize") {
       const width = Math.min(1200, Math.max(120, current.width + dx));
-      setItems((all) => all.map((item) => item.id === current.id ? { ...item, width } : item));
+      replaceItems((all) => all.map((item) => item.id === current.id ? { ...item, width } : item), { record: false });
       return;
     }
     const dy = (event.clientY - current.startY) / view.scale;
-    setItems((all) => all.map((item) => item.id === current.id ? { ...item, x: current.x + dx, y: current.y + dy } : item));
+    replaceItems((all) => all.map((item) => item.id === current.id ? { ...item, x: current.x + dx, y: current.y + dy } : item), { record: false });
   };
 
   const arrange = () => {
-    setItems((all) => all.map((item, index) => ({ ...item, x: 140 + (index % 3) * 470, y: 300 + Math.floor(index / 3) * 340 })));
+    replaceItems((all) => all.map((item, index) => ({ ...item, x: 140 + (index % 3) * 470, y: 300 + Math.floor(index / 3) * 340 })));
     setView({ x: 0, y: 0, scale: .72 });
   };
 
@@ -277,7 +311,7 @@ export function WeshopWorkspace({ onExit, embedded = false, initialActionCursor 
             });
             if (response.ok) asset = await response.json();
           } catch { /* Keep browser asset when the local bridge is unavailable. */ }
-          setItems((all) => [...all, {
+          replaceItems((all) => [...all, {
             id: `material-${Date.now()}-${index}`,
             kind: "material",
             mediaType,
@@ -304,7 +338,7 @@ export function WeshopWorkspace({ onExit, embedded = false, initialActionCursor 
 
   const addTextCard = () => {
     if (!newText.trim()) return;
-    setItems((all) => [...all, { id: `material-text-${Date.now()}`, kind: "material", mediaType: "text", title: newText.trim().split("\n")[0].slice(0, 48) || "Text", content: newText.trim(), provenance: { method: "canvas-text", source: "User text" }, createdAt: new Date().toISOString(), x: (180 - view.x) / view.scale + all.length * 28, y: (190 - view.y) / view.scale + all.length * 24, width: 360, aspect: 1.35 }]);
+    replaceItems((all) => [...all, { id: `material-text-${Date.now()}`, kind: "material", mediaType: "text", title: newText.trim().split("\n")[0].slice(0, 48) || "Text", content: newText.trim(), provenance: { method: "canvas-text", source: "User text" }, createdAt: new Date().toISOString(), x: (180 - view.x) / view.scale + all.length * 28, y: (190 - view.y) / view.scale + all.length * 24, width: 360, aspect: 1.35 }]);
     setNewText(""); setTextDialogOpen(false); setAddMenuOpen(false);
   };
 
@@ -335,7 +369,7 @@ export function WeshopWorkspace({ onExit, embedded = false, initialActionCursor 
 
   const removeSelected = () => {
     if (!selected) return;
-    setItems((all) => all.filter((item) => item.id !== selected));
+    replaceItems((all) => all.filter((item) => item.id !== selected));
     setSelected(null);
   };
 
@@ -362,8 +396,15 @@ export function WeshopWorkspace({ onExit, embedded = false, initialActionCursor 
 
   useEffect(() => {
     const onKey = (event) => {
-      if ((event.key === "Backspace" || event.key === "Delete") && !event.target.closest("input")) removeSelected();
-      if (event.key === "0" && !event.target.closest("input")) fitAll();
+      const target = event.target instanceof Element ? event.target : null;
+      const editing = target?.closest("input, textarea, select, [contenteditable='true'], [role='textbox']") !== null;
+      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "z" && !event.shiftKey && !editing) {
+        event.preventDefault();
+        undo();
+        return;
+      }
+      if ((event.key === "Backspace" || event.key === "Delete") && !editing && !event.metaKey && !event.ctrlKey && !event.altKey) removeSelected();
+      if (event.key === "0" && !editing) fitAll();
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
@@ -383,6 +424,7 @@ export function WeshopWorkspace({ onExit, embedded = false, initialActionCursor 
       </div>
       <span className="saved-state">Saved locally</span>
       <div className="topbar-actions">
+        <button className="quiet-button undo-button" onClick={undo} disabled={undoDepth === 0} title="返回上一步 (⌘/Ctrl+Z)"><ArrowCounterClockwise size={17} /> 返回上一步</button>
         <button className="quiet-button" onClick={arrange}><SquaresFour size={17} /> Arrange</button>
         <div className="add-menu-wrap"><button className="primary-button" onClick={() => setAddMenuOpen((open) => !open)}><UploadSimple size={17} /> Add <CaretDown size={11} /></button>{addMenuOpen && <div className="add-menu"><button onClick={() => { fileRef.current.click(); setAddMenuOpen(false); }}><UploadSimple size={16} /><span><strong>上传文件</strong><small>图片、视频、音频、TXT</small></span></button><button onClick={() => { setTextDialogOpen(true); setAddMenuOpen(false); }}><TextT size={16} /><span><strong>添加文字</strong><small>直接写入画布</small></span></button></div>}</div>
       </div>

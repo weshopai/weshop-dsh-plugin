@@ -14,6 +14,8 @@ The browser contribution does not open when the preset is selected. It keeps the
 
 Remote generation URLs are published directly into the canvas. Local asset copying remains available only for local-only tool outputs and user uploads. Selected canvas assets can be downloaded or deleted from the floating action bar.
 
+Canvas item mutations keep an in-memory undo history. Users can undo from the top bar or with Command/Ctrl+Z; keyboard deletion is disabled while any text-editing control has focus.
+
 ## Build
 
 ```bash

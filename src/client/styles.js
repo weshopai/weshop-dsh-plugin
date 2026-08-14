@@ -38,8 +38,9 @@ const CSS = `
 .add-menu button small { color: #8b8c86; font-size: 8px; }
 .quiet-button, .primary-button { height: 36px; border: 0; border-radius: 10px; display: inline-flex; flex-direction: row; align-items: center; justify-content: center; gap: 7px; cursor: pointer; transition: transform .16s ease, background .16s ease; }
 .quiet-button { padding: 0 13px; background: #ecece7; }
-.primary-button { padding: 0 14px; color: #fff; background: #232421; }
+.weshop-root .primary-button { padding: 0 14px; color: #fff; background: #232421; }
 .quiet-button:hover, .primary-button:hover { transform: translateY(-1px); }
+.quiet-button:disabled { opacity: .38; transform: none; cursor: default; }
 
 .canvas { position: absolute; inset: 68px 0 0; overflow: hidden; touch-action: none; cursor: grab; background: #f8f8f5; }
 .canvas:active { cursor: grabbing; }
@@ -220,6 +221,7 @@ const CSS = `
 
 @media (max-width: 720px) {
   .saved-state, .quiet-button { display: none; }
+  .undo-button { width: 36px; display: inline-flex; padding: 0; font-size: 0; }
   .space-title { width: 130px; }
   .primary-button { width: 38px; padding: 0; font-size: 0; }
   .result-card { max-width: 78vw; }
