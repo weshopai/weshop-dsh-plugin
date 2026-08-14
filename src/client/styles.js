@@ -28,9 +28,7 @@ const CSS = `
 .canvas-menu-actions button:hover { background: #e4e5de; }
 .canvas-menu-actions .delete-canvas { color: #9a443e; background: #f6ece9; }
 .saved-state { flex: none; color: #9a9b96; font-size: 10px; white-space: nowrap; }
-.topbar-actions { margin-left: auto; display: flex; flex-direction: row; align-items: center; gap: 7px; }
-.topbar-utilities { display: flex; align-items: center; gap: 5px; }
-.topbar-divider { width: 1px; height: 20px; margin: 0 3px; background: rgba(39,41,37,.11); }
+.topbar-actions { margin-left: auto; display: flex; flex-direction: row; align-items: center; gap: 8px; }
 .add-menu-wrap { position: relative; }
 .add-menu { position: absolute; z-index: 90; right: 0; top: 43px; width: 210px; padding: 7px; border: 1px solid rgba(28,29,27,.12); border-radius: 13px; background: rgba(255,255,252,.98); box-shadow: 0 18px 54px rgba(22,23,20,.17); backdrop-filter: blur(20px); }
 .add-menu button { width: 100%; display: grid; grid-template-columns: 24px 1fr; align-items: center; gap: 5px; padding: 9px; border: 0; border-radius: 8px; text-align: left; background: transparent; cursor: pointer; }
@@ -41,9 +39,6 @@ const CSS = `
 .quiet-button, .primary-button { height: 36px; border: 0; border-radius: 10px; display: inline-flex; flex-direction: row; align-items: center; justify-content: center; gap: 7px; cursor: pointer; transition: transform .16s ease, background .16s ease; }
 .quiet-button { padding: 0 13px; background: #ecece7; }
 .weshop-root .primary-button { padding: 0 14px; color: #fff; background: #232421; }
-.arrange-button { min-width: 36px; padding-inline: 10px; border: 1px solid rgba(35,37,33,.1); color: #565a54; background: rgba(255,255,252,.72); box-shadow: 0 1px 2px rgba(26,28,25,.04); }
-.arrange-button:hover { color: #262925; background: #fff; box-shadow: 0 4px 13px rgba(26,28,25,.08); }
-.button-icon { display: grid; place-items: center; }
 .quiet-button:hover, .primary-button:hover { transform: translateY(-1px); }
 .quiet-button:disabled { opacity: .38; transform: none; cursor: default; }
 .api-key-button.is-configured { color: #285e48; background: #e5eee8; }
@@ -188,7 +183,6 @@ const CSS = `
    The canvas occupies its studio pane while fixed viewport floats are rebound
    to that pane. The studio's synchronized chat rail owns the exit affordance. */
 .weshop-split { min-width: 0; }
-.pure-canvas-shell { container-type: inline-size; }
 .weshop-split .pure-canvas-shell { position: relative; width: 100%; height: 100%; }
 .weshop-split .topbar { height: 52px; padding: 0 10px; gap: 7px; }
 .weshop-split .canvas { inset: 52px 0 0; }
@@ -203,22 +197,6 @@ const CSS = `
 .weshop-split .canvas-tool-controls { left: 12px; bottom: 12px; }
 .weshop-split .selection-actions { left: 50%; bottom: 14px; }
 .weshop-split .agent-progress { position: absolute; right: 12px; top: 62px; }
-
-@container (max-width: 980px) {
-  .topbar-actions { gap: 5px; }
-  .topbar-utilities { gap: 3px; }
-  .topbar-actions .quiet-button { width: 32px; padding: 0; }
-  .topbar-actions .button-label { display: none; }
-  .topbar-divider { margin-inline: 2px; }
-  .arrange-button { width: 34px; }
-}
-
-@container (max-width: 680px) {
-  .topbar-utilities .api-key-button { display: none; }
-  .topbar-divider { display: none; }
-  .language-switch select { width: 36px; padding-inline: 4px; font-size: 0; }
-  .language-switch select option { font-size: 9px; }
-}
 
 /* ── canvas studio: full canvas plus the live Harness session ───────────── */
 .weshop-studio { height: 100%; min-height: 0; display: grid; grid-template-columns: minmax(0, 1fr) clamp(350px, 29vw, 460px); grid-template-rows: minmax(0, 1fr); background: #eeeee9; }

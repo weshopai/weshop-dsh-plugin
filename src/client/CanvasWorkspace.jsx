@@ -376,8 +376,61 @@ export function WeshopWorkspace({ onExit, onSelectionChange, locale: controlledL
   };
 
   const arrange = () => {
-    replaceItems((all) => all.map((item, index) => ({ ...item, x: 140 + (index % 3) * 470, y: 300 + Math.floor(index / 3) * 340 })));
-    setView({ x: 0, y: 0, scale: .72 });
+    if (!items.length || !stageRef.current) return;
+    const rect = stageRef.current.getBoundingClientRect();
+    const gap = 48;
+    const outer = 96;
+    const targetWidth = Math.max(760, Math.min(1900, rect.width / .76));
+    const ordered = [...items].sort((a, b) => (a.y - b.y) || (a.x - b.x));
+    const widths = ordered.map((item) => Math.max(180, Math.min(680, item.width)));
+    const medianWidth = [...widths].sort((a, b) => a - b)[Math.floor(widths.length / 2)] || 420;
+    const normalize = Math.max(.72, Math.min(1.12, 420 / medianWidth));
+    const rows = [];
+    let row = [];
+    let rowWidth = 0;
+
+    for (const item of ordered) {
+      const width = Math.max(220, Math.min(650, item.width * normalize));
+      const height = width / Math.max(.3, item.aspect || 1);
+      const entry = { item, width, height };
+      const nextWidth = rowWidth + (row.length ? gap : 0) + width;
+      if (row.length && nextWidth > targetWidth) {
+        rows.push(row);
+        row = [entry];
+        rowWidth = width;
+      } else {
+        row.push(entry);
+        rowWidth = nextWidth;
+      }
+    }
+    if (row.length) rows.push(row);
+
+    const arranged = new Map();
+    let y = outer;
+    for (const entries of rows) {
+      const width = entries.reduce((sum, entry) => sum + entry.width, 0) + gap * Math.max(0, entries.length - 1);
+      const height = Math.max(...entries.map((entry) => entry.height));
+      let x = outer + Math.max(0, (targetWidth - width) / 2);
+      for (const entry of entries) {
+        arranged.set(entry.item.id, {
+          x,
+          y: y + (height - entry.height) / 2,
+          width: entry.width,
+        });
+        x += entry.width + gap;
+      }
+      y += height + gap;
+    }
+
+    const contentHeight = Math.max(1, y - gap + outer);
+    const boundsWidth = targetWidth + outer * 2;
+    const scale = Math.max(.28, Math.min(1, (rect.width - 80) / boundsWidth, (rect.height - 100) / contentHeight));
+    replaceItems((all) => all.map((item) => ({ ...item, ...arranged.get(item.id) })));
+    setView({
+      scale,
+      x: (rect.width - boundsWidth * scale) / 2,
+      y: (rect.height - contentHeight * scale) / 2,
+    });
   };
 
   const fitAll = () => {
@@ -525,13 +578,10 @@ export function WeshopWorkspace({ onExit, onSelectionChange, locale: controlledL
       </div>
       <span className="saved-state">Saved locally</span>
       <div className="topbar-actions">
-        <div className="topbar-utilities">
-          <label className="language-switch" title={t("语言")}><select value={locale} onChange={(event) => changeLocale(event.target.value)} aria-label={t("语言")}><option value="zh-CN">中文</option><option value="en">EN</option></select></label>
-          <button className={`quiet-button api-key-button${apiConfig?.configured ? " is-configured" : ""}`} onClick={() => setApiDialogOpen(true)} title={t("配置 WeShop API Key")}><span className="button-icon">{apiConfig?.configured ? <CheckCircle size={17} weight="fill" /> : <Key size={17} />}</span><span className="button-label">{t(apiConfig?.configured ? "API 已配置" : "配置 API Key")}</span></button>
-          <button className="quiet-button undo-button" onClick={undo} disabled={undoDepth === 0} title={t("返回上一步 (⌘/Ctrl+Z)")}><ArrowCounterClockwise size={17} /><span className="button-label">{t("返回上一步")}</span></button>
-        </div>
-        <span className="topbar-divider" aria-hidden="true" />
-        <button className="quiet-button arrange-button" onClick={arrange} title="Arrange canvas" aria-label="Arrange canvas"><SquaresFour size={17} /><span className="button-label">Arrange</span></button>
+        <label className="language-switch" title={t("语言")}><select value={locale} onChange={(event) => changeLocale(event.target.value)} aria-label={t("语言")}><option value="zh-CN">中文</option><option value="en">EN</option></select></label>
+        <button className={`quiet-button api-key-button${apiConfig?.configured ? " is-configured" : ""}`} onClick={() => setApiDialogOpen(true)} title={t("配置 WeShop API Key")}>{apiConfig?.configured ? <CheckCircle size={17} weight="fill" /> : <Key size={17} />} {t(apiConfig?.configured ? "API 已配置" : "配置 API Key")}</button>
+        <button className="quiet-button undo-button" onClick={undo} disabled={undoDepth === 0} title={t("返回上一步 (⌘/Ctrl+Z)")}><ArrowCounterClockwise size={17} /> {t("返回上一步")}</button>
+        <button className="quiet-button" onClick={arrange}><SquaresFour size={17} /> Arrange</button>
         <div className="add-menu-wrap"><button className="primary-button" onClick={() => setAddMenuOpen((open) => !open)}><UploadSimple size={17} /> Add <CaretDown size={11} /></button>{addMenuOpen && <div className="add-menu"><button onClick={() => { fileRef.current.click(); setAddMenuOpen(false); }}><UploadSimple size={16} /><span><strong>{t("上传文件")}</strong><small>{t("图片、视频、音频、TXT")}</small></span></button><button onClick={() => { setTextDialogOpen(true); setAddMenuOpen(false); }}><TextT size={16} /><span><strong>{t("添加文字")}</strong><small>{t("直接写入画布")}</small></span></button></div>}</div>
       </div>
     </header>
