@@ -1,6 +1,7 @@
 import { SquaresFour } from "@phosphor-icons/react";
 import { injectWeshopStyles } from "./styles.js";
 import { WeshopWorkspace } from "./CanvasWorkspace.jsx";
+import { CanvasChat } from "./CanvasChat.jsx";
 
 /**
  * Result canvas panel for the weshop-canvas agent mode. Registered into
@@ -10,10 +11,13 @@ import { WeshopWorkspace } from "./CanvasWorkspace.jsx";
  * AppFrame auto-closes `details` on session switch and only renders it for
  * non-blank sessions, both of which fight a persistent canvas split.
  */
-function SplitPanel({ onExit, initialActionCursor }) {
+function SplitPanel({ onExit, initialActionCursor, session, sessionTitle }) {
   return (
-    <div className="weshop-root weshop-split" style={{ position: "fixed", top: 0, right: 0, bottom: 0, width: "clamp(420px, 52vw, 920px)", maxWidth: "calc(100vw - 72px)", zIndex: 1500, pointerEvents: "auto", overflow: "hidden", boxShadow: "-18px 0 48px rgba(24, 27, 31, 0.12)" }}>
-      <WeshopWorkspace onExit={onExit} embedded initialActionCursor={initialActionCursor} />
+    <div className="weshop-root weshop-split weshop-studio" style={{ position: "fixed", inset: 0, zIndex: 1500, pointerEvents: "auto", overflow: "hidden" }}>
+      <main className="weshop-canvas-pane">
+        <WeshopWorkspace onExit={onExit} embedded initialActionCursor={initialActionCursor} />
+      </main>
+      <CanvasChat session={session} sessionTitle={sessionTitle} onExit={onExit} />
     </div>
   );
 }
@@ -47,19 +51,28 @@ export function apply(ctx) {
   let disposePanel = null;
   let disposeAction = null;
   let weshopActive = false;
+  let panelSessionId = null;
   let actionCursor = Date.now();
 
   const openPanel = (initialActionCursor = Date.now()) => {
     if (disposePanel !== null) return;
+    const state = ctx.sessions.list.getSnapshot();
+    const sessionId = state.current;
+    const binding = sessionId === undefined ? undefined : ctx.sessions.binding(sessionId);
+    if (sessionId === undefined || binding === undefined) return;
+    panelSessionId = sessionId;
     disposePanel = ctx.slots.register(
       { name: "shell.overlay", id: "weshop-canvas-right-panel", order: 10 },
       () => (
         <SplitPanel
           initialActionCursor={initialActionCursor}
+          session={binding.session}
+          sessionTitle={state.byId[sessionId]?.title}
           onExit={() => {
             if (disposePanel !== null) {
               disposePanel();
               disposePanel = null;
+              panelSessionId = null;
             }
           }}
         />
@@ -71,7 +84,14 @@ export function apply(ctx) {
     const state = ctx.sessions.list.getSnapshot();
     const current = state.current === undefined ? undefined : state.byId[state.current];
     const weshop = current !== undefined && current.agentPreset === WESHOP_PRESET;
+    const sessionChanged = panelSessionId !== null && panelSessionId !== state.current;
+    const reopenForSession = sessionChanged && disposePanel !== null;
     weshopActive = weshop;
+    if (sessionChanged && disposePanel !== null) {
+      disposePanel();
+      disposePanel = null;
+      panelSessionId = null;
+    }
     if (weshop) {
       if (disposeAction === null) {
         disposeAction = ctx.slots.register(
@@ -79,10 +99,12 @@ export function apply(ctx) {
           () => <WeshopOpenAction onOpen={openPanel} />,
         );
       }
+      if (reopenForSession) openPanel();
     } else {
       if (disposePanel !== null) {
         disposePanel();
         disposePanel = null;
+        panelSessionId = null;
       }
       if (disposeAction !== null) {
         disposeAction();

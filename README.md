@@ -10,7 +10,7 @@ This package mounts WeShop as one native Cordis plugin with four contributions:
 
 It does not launch an MCP child process. Cordis owns every registration and removes it when the plugin unloads.
 
-The browser contribution does not open when the preset is selected. It keeps the normal conversation visible while generation runs, then opens the canvas after a native publish-result action succeeds. The preset-only footer button can open it manually.
+The browser contribution does not open when the preset is selected. It keeps the normal Harness conversation visible while generation runs, then opens a full-screen canvas studio after a native publish-result action succeeds. The studio includes a compact live view of the same Harness session and can send prompts back into it. The preset-only footer button can open it manually.
 
 ## Build
 

@@ -143,11 +143,9 @@ const CSS = `
 @keyframes veil-in { from { opacity: 0; } }
 @keyframes progress-pulse { 50% { opacity: .45; transform: scale(.82); } }
 
-/* ── embedded (details-column split) mode ────────────────────────────────────
-   The weshop-canvas agent mode shows the canvas beside the conversation in the
-   right details column. Fixed viewport floats are rebound to the column, the
-   exit affordance is hidden (closing the details column is the way back), and
-   the topbar compacts to the narrow width. */
+/* ── embedded studio mode ────────────────────────────────────────────────────
+   The canvas occupies its studio pane while fixed viewport floats are rebound
+   to that pane. The studio's synchronized chat rail owns the exit affordance. */
 .weshop-split { min-width: 0; }
 .weshop-split .pure-canvas-shell { position: relative; width: 100%; height: 100%; }
 .weshop-split .topbar { height: 52px; padding: 0 10px; gap: 7px; }
@@ -163,6 +161,39 @@ const CSS = `
 .weshop-split .selection-actions { left: 50%; bottom: 14px; }
 .weshop-split .agent-progress { position: absolute; right: 12px; top: 62px; }
 
+/* ── canvas studio: full canvas plus the live Harness session ───────────── */
+.weshop-studio { display: grid; grid-template-columns: minmax(0, 1fr) clamp(350px, 29vw, 460px); background: #eeeee9; }
+.weshop-canvas-pane { position: relative; min-width: 0; height: 100%; overflow: hidden; border-right: 1px solid rgba(31,32,30,.1); }
+.canvas-chat { min-width: 0; height: 100%; display: grid; grid-template-rows: auto minmax(0, 1fr) auto; color: #272824; background: #fbfbf8; }
+.canvas-chat-head { min-height: 68px; display: flex; align-items: center; justify-content: space-between; gap: 14px; padding: 13px 16px 12px 18px; border-bottom: 1px solid #e8e8e2; }
+.canvas-chat-head > div { min-width: 0; display: grid; gap: 4px; }
+.canvas-chat-head span { color: #77867d; font-size: 8px; font-weight: 750; letter-spacing: .14em; }
+.canvas-chat-head strong { overflow: hidden; font: 650 13px/1.2 "Manrope", system-ui, sans-serif; text-overflow: ellipsis; white-space: nowrap; }
+.canvas-chat-head button { width: 32px; height: 32px; flex: none; display: grid; place-items: center; padding: 0; border: 0; border-radius: 9px; color: #676862; background: #efefe9; cursor: pointer; }
+.canvas-chat-head button:hover { color: #242522; background: #e5e6df; }
+.canvas-chat-feed { overflow: auto; padding: 22px 18px 28px; scroll-behavior: smooth; }
+.canvas-chat-empty { min-height: 54vh; display: grid; place-content: center; justify-items: center; gap: 8px; color: #8b8c86; text-align: center; }
+.canvas-chat-empty span { color: #37423c; font: 650 13px "Manrope", system-ui, sans-serif; }
+.canvas-chat-empty p { max-width: 270px; margin: 0; font-size: 11px; line-height: 1.65; }
+.canvas-chat-message { max-width: 92%; display: grid; gap: 6px; margin: 0 0 18px; animation: chat-rise .18s ease-out; }
+.canvas-chat-message > span { color: #91928c; font-size: 8px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
+.canvas-chat-message p { margin: 0; padding: 11px 13px; border-radius: 5px 14px 14px 14px; color: #343632; background: #eeefe9; font-size: 12px; line-height: 1.58; white-space: pre-wrap; overflow-wrap: anywhere; }
+.canvas-chat-message.is-user { margin-left: auto; justify-items: end; }
+.canvas-chat-message.is-user p { border-radius: 14px 5px 14px 14px; color: #f5f5f0; background: #292b27; }
+.canvas-chat-message small { padding-left: 3px; color: #718078; font-size: 9px; line-height: 1.4; }
+.canvas-chat-message i { color: #72756f; font-size: 10px; font-style: normal; animation: progress-pulse 1.5s ease-in-out infinite; }
+.canvas-chat-compose { padding: 12px 14px 14px; border-top: 1px solid #e5e6df; background: rgba(251,251,248,.94); backdrop-filter: blur(18px); }
+.canvas-chat-input { display: grid; grid-template-columns: minmax(0, 1fr) 34px; align-items: end; gap: 8px; padding: 9px 9px 9px 12px; border: 1px solid #d9dad3; border-radius: 14px; background: white; box-shadow: 0 7px 24px rgba(28,31,27,.06); }
+.canvas-chat-input:focus-within { border-color: #819389; box-shadow: 0 0 0 3px rgba(71,120,95,.08); }
+.canvas-chat-input textarea { width: 100%; max-height: 132px; resize: none; padding: 2px 0; border: 0; outline: 0; color: #292b27; background: transparent; font: 12px/1.5 "DM Sans", system-ui, sans-serif; }
+.canvas-chat-input textarea::placeholder { color: #a3a49e; }
+.canvas-chat-input button { width: 34px; height: 34px; display: grid; place-items: center; padding: 0; border: 0; border-radius: 10px; color: white; background: #2b2d29; cursor: pointer; }
+.canvas-chat-input button:disabled { opacity: .28; cursor: default; }
+.canvas-chat-input .canvas-chat-stop { color: #864c45; background: #f3e9e6; }
+.canvas-chat-compose > small { display: block; padding: 7px 3px 0; color: #a0a19b; font-size: 8px; }
+.canvas-chat-error { margin: 0 2px 8px; color: #a0443b; font-size: 9px; line-height: 1.4; }
+@keyframes chat-rise { from { opacity: 0; transform: translateY(5px); } }
+
 @media (max-width: 720px) {
   .saved-state, .quiet-button { display: none; }
   .space-title { width: 130px; }
@@ -171,6 +202,11 @@ const CSS = `
   .edit-dialog { grid-template-columns: 1fr; max-height: 88vh; overflow: auto; }
   .edit-preview { min-height: 180px; max-height: 240px; }
   .edit-copy { padding: 26px; }
+  .weshop-studio { grid-template-columns: 1fr; grid-template-rows: minmax(0, 56vh) minmax(0, 44vh); }
+  .weshop-canvas-pane { border-right: 0; border-bottom: 1px solid rgba(31,32,30,.1); }
+  .canvas-chat-head { min-height: 50px; padding-block: 8px; }
+  .canvas-chat-feed { padding-block: 14px; }
+  .canvas-chat-empty { min-height: 12vh; }
 }
 
 @media (prefers-reduced-motion: reduce) { .weshop-root * { transition: none !important; } }
