@@ -92,6 +92,8 @@ export function apply(ctx) {
   let actionCursor = Date.now();
   let disposeModeHint = null;
   let modeHintTimer = null;
+  let resultOpenTimer = null;
+  let pendingResultCursor = null;
   const blankBySession = new Map();
   // Running/status updates can briefly replace a session summary without its
   // preset. Retain the last host-confirmed preset per session so the canvas
@@ -210,7 +212,14 @@ export function apply(ctx) {
         action.type === "add-asset" && action.payload?.kind === "result"
       ));
       if (weshopActive && publishedResults.length > 0) {
-        openPanel(Math.min(...publishedResults.map((action) => Number(action.sequence))) - 1);
+        const firstSequence = Math.min(...publishedResults.map((action) => Number(action.sequence))) - 1;
+        pendingResultCursor = pendingResultCursor === null ? firstSequence : Math.min(pendingResultCursor, firstSequence);
+        if (resultOpenTimer !== null) window.clearTimeout(resultOpenTimer);
+        resultOpenTimer = window.setTimeout(() => {
+          if (weshopActive && pendingResultCursor !== null) openPanel(pendingResultCursor);
+          pendingResultCursor = null;
+          resultOpenTimer = null;
+        }, 900);
       }
     } catch { /* The Host contribution may still be starting or reloading. */ }
   };
@@ -221,6 +230,7 @@ export function apply(ctx) {
     presetSelected();
     window.clearInterval(actionTimer);
     if (modeHintTimer !== null) window.clearTimeout(modeHintTimer);
+    if (resultOpenTimer !== null) window.clearTimeout(resultOpenTimer);
     if (disposeModeHint !== null) disposeModeHint();
     if (disposePanel !== null) disposePanel();
     if (disposeAction !== null) disposeAction();

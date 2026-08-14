@@ -42,6 +42,7 @@ export function WeshopWorkspace({ onExit, onSelectionChange, locale: controlledL
   const fileRef = useRef(null);
   const actionCursor = useRef(initialActionCursor);
   const itemsRef = useRef(items);
+  const viewRef = useRef(view);
   const historyRef = useRef([]);
   const [undoDepth, setUndoDepth] = useState(0);
   const [selectionRect, setSelectionRect] = useState(null);
@@ -79,6 +80,7 @@ export function WeshopWorkspace({ onExit, onSelectionChange, locale: controlledL
   useEffect(() => {
     setCanvases((all) => all.map((canvas) => canvas.id === activeCanvasId ? { ...canvas, title, items, view } : canvas));
   }, [activeCanvasId, items, title, view]);
+  useEffect(() => { viewRef.current = view; }, [view]);
   useEffect(() => { localStorage.setItem(STORAGE_KEY, JSON.stringify(canvases)); }, [canvases]);
 
   const canvasState = useMemo(() => {
@@ -160,18 +162,42 @@ export function WeshopWorkspace({ onExit, onSelectionChange, locale: controlledL
   };
 
   useEffect(() => {
+    const readAspect = (payload) => new Promise((resolve) => {
+      const fallback = payload.aspect || (payload.mediaType === "audio" ? 2.6 : payload.mediaType === "text" ? 1.35 : 1.5);
+      if (!payload.url || !["image", "video", undefined].includes(payload.mediaType)) return resolve(fallback);
+      const timer = window.setTimeout(() => resolve(fallback), 3500);
+      if ((payload.mediaType || "image") === "image") {
+        const image = new Image();
+        image.onload = () => { window.clearTimeout(timer); resolve(image.naturalWidth / image.naturalHeight || fallback); };
+        image.onerror = () => { window.clearTimeout(timer); resolve(fallback); };
+        image.src = payload.url;
+      } else {
+        const video = document.createElement("video");
+        video.onloadedmetadata = () => { window.clearTimeout(timer); resolve(video.videoWidth / video.videoHeight || fallback); };
+        video.onerror = () => { window.clearTimeout(timer); resolve(fallback); };
+        video.src = payload.url;
+      }
+    });
     const applyActions = async () => {
       try {
         const response = await fetch(`/api/weshop/actions?after=${actionCursor.current}`);
         const data = await response.json();
-        for (const action of data.actions || []) {
+        const additions = [];
+        for (const action of [...(data.actions || [])].sort((a, b) => (a.sequence || 0) - (b.sequence || 0))) {
           actionCursor.current = Math.max(actionCursor.current, action.sequence || 0);
           if (action.type !== "add-asset" || (!action.payload?.url && !action.payload?.content)) continue;
           const payload = action.payload;
-          const append = (aspect = payload.aspect || 1.5) => replaceItems((all) => {
-            if (all.some((item) => item.id === payload.id)) return all;
-            const index = all.length;
-            return [...all, {
+          additions.push({ payload, aspect: await readAspect(payload) });
+        }
+        if (!additions.length) return;
+        let lastInserted = null;
+        replaceItems((all) => {
+          const next = [...all];
+          const viewport = viewRef.current;
+          for (const { payload, aspect } of additions) {
+            if (next.some((item) => item.id === payload.id)) continue;
+            const index = next.length;
+            lastInserted = {
               id: payload.id,
               kind: "result",
               mediaType: payload.mediaType || "image",
@@ -181,27 +207,34 @@ export function WeshopWorkspace({ onExit, onSelectionChange, locale: controlledL
               title: payload.title || "Generated result",
               provenance: payload.provenance || { method: "agent-generation" },
               createdAt: payload.createdAt || new Date().toISOString(),
-              x: (180 - view.x) / view.scale + (index % 3) * 34,
-              y: (210 - view.y) / view.scale + (index % 4) * 30,
+              x: (180 - viewport.x) / viewport.scale + (index % 3) * 34,
+              y: (210 - viewport.y) / viewport.scale + (index % 4) * 30,
               width: payload.width || 460,
               aspect,
-            }];
+            };
+            next.push(lastInserted);
+          }
+          return next;
+        });
+        if (lastInserted) {
+          setSelectedIds([lastInserted.id]);
+          window.requestAnimationFrame(() => {
+            const rect = stageRef.current?.getBoundingClientRect();
+            if (!rect) return;
+            const height = lastInserted.width / lastInserted.aspect;
+            const scale = Math.min(1, Math.max(.5, Math.min((rect.width * .68) / lastInserted.width, (rect.height * .72) / height)));
+            setView({
+              scale,
+              x: rect.width / 2 - (lastInserted.x + lastInserted.width / 2) * scale,
+              y: rect.height / 2 - (lastInserted.y + height / 2) * scale,
+            });
           });
-          if ((payload.mediaType || "image") === "image") {
-            const image = new Image();
-            image.onload = () => append(image.naturalWidth / image.naturalHeight);
-            image.src = payload.url;
-          } else if (payload.mediaType === "video") {
-            const video = document.createElement("video");
-            video.onloadedmetadata = () => append(video.videoWidth / video.videoHeight || 16 / 9);
-            video.src = payload.url;
-          } else append(payload.mediaType === "audio" ? 2.6 : 1.35);
         }
       } catch { /* The local canvas bridge may still be starting. */ }
     };
     const timer = setInterval(applyActions, 1000);
     return () => clearInterval(timer);
-  }, [view]);
+  }, []);
 
   useEffect(() => {
     const readProgress = async () => {
