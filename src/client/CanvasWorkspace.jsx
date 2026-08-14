@@ -525,10 +525,13 @@ export function WeshopWorkspace({ onExit, onSelectionChange, locale: controlledL
       </div>
       <span className="saved-state">Saved locally</span>
       <div className="topbar-actions">
-        <label className="language-switch" title={t("语言")}><select value={locale} onChange={(event) => changeLocale(event.target.value)} aria-label={t("语言")}><option value="zh-CN">中文</option><option value="en">EN</option></select></label>
-        <button className={`quiet-button api-key-button${apiConfig?.configured ? " is-configured" : ""}`} onClick={() => setApiDialogOpen(true)} title={t("配置 WeShop API Key")}>{apiConfig?.configured ? <CheckCircle size={17} weight="fill" /> : <Key size={17} />} {t(apiConfig?.configured ? "API 已配置" : "配置 API Key")}</button>
-        <button className="quiet-button undo-button" onClick={undo} disabled={undoDepth === 0} title={t("返回上一步 (⌘/Ctrl+Z)")}><ArrowCounterClockwise size={17} /> {t("返回上一步")}</button>
-        <button className="quiet-button" onClick={arrange}><SquaresFour size={17} /> Arrange</button>
+        <div className="topbar-utilities">
+          <label className="language-switch" title={t("语言")}><select value={locale} onChange={(event) => changeLocale(event.target.value)} aria-label={t("语言")}><option value="zh-CN">中文</option><option value="en">EN</option></select></label>
+          <button className={`quiet-button api-key-button${apiConfig?.configured ? " is-configured" : ""}`} onClick={() => setApiDialogOpen(true)} title={t("配置 WeShop API Key")}><span className="button-icon">{apiConfig?.configured ? <CheckCircle size={17} weight="fill" /> : <Key size={17} />}</span><span className="button-label">{t(apiConfig?.configured ? "API 已配置" : "配置 API Key")}</span></button>
+          <button className="quiet-button undo-button" onClick={undo} disabled={undoDepth === 0} title={t("返回上一步 (⌘/Ctrl+Z)")}><ArrowCounterClockwise size={17} /><span className="button-label">{t("返回上一步")}</span></button>
+        </div>
+        <span className="topbar-divider" aria-hidden="true" />
+        <button className="quiet-button arrange-button" onClick={arrange} title="Arrange canvas" aria-label="Arrange canvas"><SquaresFour size={17} /><span className="button-label">Arrange</span></button>
         <div className="add-menu-wrap"><button className="primary-button" onClick={() => setAddMenuOpen((open) => !open)}><UploadSimple size={17} /> Add <CaretDown size={11} /></button>{addMenuOpen && <div className="add-menu"><button onClick={() => { fileRef.current.click(); setAddMenuOpen(false); }}><UploadSimple size={16} /><span><strong>{t("上传文件")}</strong><small>{t("图片、视频、音频、TXT")}</small></span></button><button onClick={() => { setTextDialogOpen(true); setAddMenuOpen(false); }}><TextT size={16} /><span><strong>{t("添加文字")}</strong><small>{t("直接写入画布")}</small></span></button></div>}</div>
       </div>
     </header>
