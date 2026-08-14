@@ -13,7 +13,7 @@ WeShop generation runs server-side through the native Cordis tools (`weshop_gene
 1. Read the canvas (`weshop_canvas_get_state`) and use the selected `material` item as the source. Use its `asset.localPath` when available, else its `asset.url`.
 2. Choose the agent and version from the table below; read that agent's parameter notes.
 3. Call `weshop_generate_run` with `{ agent, originalImage, taskName?, params, wait: true }`. A local path is uploaded automatically; result URLs come back in `data.executions[*].result[*].image` (image agents) or `*.video` / `*.videoPoster` (video agents).
-4. On success, download the result to a local file (canvas assets are served by DSH at `/api/weshop/assets/...`) and call `weshop_canvas_add_image` with `kind: result` and complete provenance (`method`, `agent`, `version`, `executionId`, `prompt`/`taskName`, `sourceItemIds`, returned URL, completion time). Never overwrite or reclassify the source material item.
+4. On success, publish each returned remote URL directly with `weshop_canvas_publish_result` (images) or `weshop_canvas_publish_asset` (video/audio). Do not download the generated file first. Include complete provenance (`method`, `agent`, `version`, `executionId`, `prompt`/`taskName`, `sourceItemIds`, returned URL, completion time). A local path is supported only when the generating tool genuinely returns a local-only file. Never overwrite or reclassify the source material item.
 5. If the run fails or times out, report the API error and offer to retry (the error envelope's `retryable` flag signals whether a retry is worthwhile).
 
 ## Agents (all `v1.0`)

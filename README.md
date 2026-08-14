@@ -12,6 +12,8 @@ It does not launch an MCP child process. Cordis owns every registration and remo
 
 The browser contribution does not open when the preset is selected. It keeps the normal Harness conversation visible while generation runs, then opens a full-screen canvas studio after a native publish-result action succeeds. The studio includes a compact live view of the same Harness session, can send prompts back into it, and answers its pending question and approval interactions. The preset-only footer button can open it manually.
 
+Remote generation URLs are published directly into the canvas. Local asset copying remains available only for local-only tool outputs and user uploads. Selected canvas assets can be downloaded or deleted from the floating action bar.
+
 ## Build
 
 ```bash

@@ -43,14 +43,22 @@ export function WeshopWorkspace({ onExit, embedded = false, initialActionCursor 
   useEffect(() => { localStorage.setItem(STORAGE_KEY, JSON.stringify(canvases)); }, [canvases]);
 
   const canvasState = useMemo(() => {
-    const describeItem = ({ src, localPath, ...item }) => ({
-      ...item,
-      asset: item.mediaType === "text"
-        ? { transport: "inline-text", content: item.content || "", readableByAgent: true }
-        : src?.startsWith("data:")
-          ? { transport: "browser-data-url", readableByAgent: false }
-          : { transport: "local-url", url: src ? new URL(src, window.location.origin).href : null, ...(localPath ? { localPath } : {}), readableByAgent: true },
-    });
+    const describeItem = ({ src, localPath, ...item }) => {
+      const resolvedUrl = src ? new URL(src, window.location.origin) : null;
+      return {
+        ...item,
+        asset: item.mediaType === "text"
+          ? { transport: "inline-text", content: item.content || "", readableByAgent: true }
+          : src?.startsWith("data:")
+            ? { transport: "browser-data-url", readableByAgent: false }
+            : {
+                transport: resolvedUrl?.origin === window.location.origin ? "local-url" : "remote-url",
+                url: resolvedUrl?.href || null,
+                ...(localPath ? { localPath } : {}),
+                readableByAgent: true,
+              },
+      };
+    };
     const activeItem = items.find((item) => item.id === selected);
     return {
       version: 3,
@@ -331,6 +339,27 @@ export function WeshopWorkspace({ onExit, embedded = false, initialActionCursor 
     setSelected(null);
   };
 
+  const downloadSelected = async () => {
+    if (!selectedItem?.src) return;
+    const filename = (selectedItem.title || "weshop-result").replace(/[\\/:*?"<>|]+/g, "-");
+    try {
+      const response = await fetch(selectedItem.src);
+      if (!response.ok) throw new Error(`download failed: ${response.status}`);
+      const objectUrl = URL.createObjectURL(await response.blob());
+      const link = document.createElement("a");
+      link.href = objectUrl;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.setTimeout(() => URL.revokeObjectURL(objectUrl), 1000);
+      notify("已开始下载");
+    } catch {
+      window.open(selectedItem.src, "_blank", "noopener,noreferrer");
+      notify("原图已打开，可从浏览器保存");
+    }
+  };
+
   useEffect(() => {
     const onKey = (event) => {
       if ((event.key === "Backspace" || event.key === "Delete") && !event.target.closest("input")) removeSelected();
@@ -390,7 +419,7 @@ export function WeshopWorkspace({ onExit, embedded = false, initialActionCursor 
 
       {!items.length && <button className="empty-state" onClick={() => setAddMenuOpen(true)}><ImageSquare size={26} /><strong>Add your first material</strong><span>支持图片、视频、音频和文字，生成结果会自动出现。</span></button>}
       {dropActive && <div className="drop-overlay"><UploadSimple size={30} /><strong>拖到这里添加素材</strong><span>图片、视频、音频和 TXT</span></div>}
-      {selectedItem && <div className="selection-actions">{selectedItem.src && <a href={selectedItem.src} download={selectedItem.title} aria-label="Download selected"><DownloadSimple size={17} /></a>}<button onClick={removeSelected} aria-label="Delete selected"><Trash size={17} /></button></div>}
+      {selectedItem && <div className="selection-actions" onPointerDown={(event) => event.stopPropagation()}>{selectedItem.src && <button type="button" onClick={() => void downloadSelected()} aria-label="下载所选内容" title="下载"><DownloadSimple size={17} /></button>}<button type="button" onClick={removeSelected} aria-label="删除所选内容" title="删除"><Trash size={17} /></button></div>}
       <div className="canvas-controls"><button onClick={() => zoomAt(view.scale / 1.18, innerWidth / 2, innerHeight / 2)} aria-label="Zoom out"><Minus size={16} /></button><span>{Math.round(view.scale * 100)}%</span><button onClick={() => zoomAt(view.scale * 1.18, innerWidth / 2, innerHeight / 2)} aria-label="Zoom in"><Plus size={16} /></button><i /><button onClick={fitAll} aria-label="Fit all"><ArrowsInSimple size={17} /></button><button onClick={() => setView({ x: 0, y: 0, scale: .72 })} aria-label="Reset view"><CornersOut size={17} /></button></div>
     </main>
 

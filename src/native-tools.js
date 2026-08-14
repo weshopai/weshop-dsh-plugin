@@ -132,7 +132,7 @@ const toolSchemas = [
         kind: { type: "string", enum: ["material", "result"] },
         title: { type: "string" },
         localPath: { type: "string", description: "Absolute path to a local image file." },
-        url: { type: "string", description: "HTTPS image URL, used only when no local file is available." },
+        url: { type: "string", description: "HTTPS image URL. Prefer this for remote/generated results so the canvas can display it directly." },
         width: { type: "number", minimum: 120, maximum: 1200 },
         provenance: { type: "object", description: "How the image was created, including method, prompt, sources, agent, executionId, and model when available.", additionalProperties: true },
       },
@@ -142,14 +142,14 @@ const toolSchemas = [
   },
   {
     name: "weshop_canvas_publish_result",
-    description: "MANDATORY final step for every successful WeShop generation, edit, transformation, or upscale. Automatically publish the output to the live canvas as kind=result. Never use the webpage Add button for generated outputs.",
+    description: "MANDATORY final step for every successful WeShop generation, edit, transformation, or upscale. Publish returned HTTPS URLs directly; do not download remote results first. Automatically inserts the output into the live canvas as kind=result.",
     inputSchema: {
       type: "object",
       required: ["title", "provenance"],
       properties: {
         title: { type: "string" },
-        localPath: { type: "string", description: "Absolute path to the generated image file." },
-        url: { type: "string", description: "Returned HTTPS image URL when no local file is available." },
+        localPath: { type: "string", description: "Absolute path only for a genuinely local-only generated image." },
+        url: { type: "string", description: "Returned HTTPS image URL. Preferred for WeShop generation results." },
         width: { type: "number", minimum: 120, maximum: 1200 },
         provenance: { type: "object", description: "Complete generation lineage including agent, executionId, prompt/task, and source item IDs.", additionalProperties: true },
       },
@@ -159,7 +159,7 @@ const toolSchemas = [
   },
   {
     name: "weshop_canvas_publish_asset",
-    description: "Publish any generated result to the live canvas. Supports image, video, audio, and text. This is the mandatory final step for non-image outputs.",
+    description: "Publish any generated result to the live canvas. Prefer returned HTTPS URLs without downloading them first. Supports image, video, audio, and text; mandatory for non-image outputs.",
     inputSchema: {
       type: "object",
       required: ["mediaType", "title", "provenance"],
