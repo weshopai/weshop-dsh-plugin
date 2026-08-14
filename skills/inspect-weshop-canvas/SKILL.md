@@ -51,7 +51,7 @@ When the user asks to generate, edit, transform, or animate canvas content:
 4. If the WeShop API key is unavailable, stop before any API request. Tell the user to open the WeShop canvas and click **Configure API Key** in its top bar, then retry; alternatively they may set `WESHOP_API_KEY` before starting Harness. Direct them to https://www.weshop.ai/apiKey only to obtain a key.
 5. Preserve output provenance for canvas insertion: WeShop agent name/version, execution ID, source canvas item IDs, task name or prompt, creation time, and returned asset URL.
 6. Classify generated outputs as `result`; never overwrite or reclassify their source `material` items.
-7. After a successful generation, publish the matching asset type directly from the returned URL so it appears automatically: images use `weshop_canvas_publish_result`; video/audio/text use `weshop_canvas_publish_asset`. Do not download remote results first; use a local path only for a genuinely local-only output. Never use `Add` for this.
+7. After a successful generation, publish the matching asset type directly from the returned URL so it appears automatically: images use `weshop_canvas_publish_result`; video/audio/text use `weshop_canvas_publish_asset`. For every output of the same execution, pass `batchId` equal to the execution ID and a zero-based `batchIndex` in returned-output order so the canvas keeps the batch together. Do not download remote results first; use a local path only for a genuinely local-only output. Never use `Add` for this.
 8. Put complete creation lineage in `provenance`: `method`, WeShop `agent` and `version`, `executionId`, `prompt` or `taskName`, `sourceItemIds`, returned URL, and completion timestamp.
 
 ## Pure plugin boundary

@@ -4,8 +4,8 @@
 
 **内置于 DeepSeek Harness 的 AI 电商视觉工作台。**
 
-[![License](https://img.shields.io/badge/license-PolyForm%20Noncommercial-7530FE.svg)](./LICENSE)
-[![Version](https://img.shields.io/badge/version-0.1.26-282828.svg)]()
+[![License](https://img.shields.io/badge/license-MIT-2ea44f.svg)](./LICENSE)
+[![Version](https://img.shields.io/badge/version-0.1.27-282828.svg)]()
 [![Platform](https://img.shields.io/badge/platform-DeepSeek%20Harness%20plugin-282828.svg)]()
 [![English](https://img.shields.io/badge/Language-English-7530FE.svg)](./README.md)
 
@@ -82,12 +82,12 @@ pnpm build
 pnpm pack
 ```
 
-完成后会生成类似 `weshop-dsh-weshop-2-0-0.1.26.tgz` 的版本化文件。
+完成后会生成类似 `weshop-dsh-weshop-2-0-0.1.27.tgz` 的版本化文件。
 
 ### 2. 安装到 Harness Web profile
 
 ```bash
-PLUGIN_TARBALL="/你的绝对路径/weshop-dsh-weshop-2-0-0.1.26.tgz"
+PLUGIN_TARBALL="/你的绝对路径/weshop-dsh-weshop-2-0-0.1.27.tgz"
 cd ~/.dsh/profiles/web
 pnpm add "$PLUGIN_TARBALL"
 ```
@@ -157,13 +157,11 @@ pnpm pack --dry-run
 
 ## 🤝 联系方式
 
-支持、合作或商业授权请联系 [hi@weshop.ai](mailto:hi@weshop.ai)。
+支持或合作请联系 [hi@weshop.ai](mailto:hi@weshop.ai)。
 
 ## 📄 许可证
 
-本软件采用 [PolyForm Noncommercial License 1.0.0](LICENSE) 以 source-available 方式提供。允许个人、研究、教育、慈善及其他非商业用途。商业使用必须另行取得 WeShop AI 的书面许可。
-
-由于限制商业使用，本许可证不属于 OSI 认可的开源许可证。
+本软件采用 [MIT License](LICENSE) 发布。
 
 ---
 
@@ -171,6 +169,6 @@ pnpm pack --dry-run
 
 <p>由 WeShop AI 团队倾注 ❤️ 打造。</p>
 
-[![PolyForm Noncommercial](https://img.shields.io/badge/License-PolyForm%20Noncommercial-7530FE.svg)](./LICENSE)
+[![MIT License](https://img.shields.io/badge/License-MIT-2ea44f.svg)](./LICENSE)
 
 </div>

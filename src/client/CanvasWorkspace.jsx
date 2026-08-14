@@ -49,6 +49,7 @@ export function WeshopWorkspace({ onExit, onSelectionChange, locale: controlledL
   const gesture = useRef(null);
   const fileRef = useRef(null);
   const actionCursor = useRef(initialActionCursor);
+  const applyingActions = useRef(false);
   const itemsRef = useRef(items);
   const viewRef = useRef(view);
   const historyRef = useRef([]);
@@ -171,33 +172,29 @@ export function WeshopWorkspace({ onExit, onSelectionChange, locale: controlledL
   };
 
   useEffect(() => {
-    const readAspect = (payload) => new Promise((resolve) => {
-      const fallback = payload.aspect || (payload.mediaType === "audio" ? 2.6 : payload.mediaType === "text" ? 1.35 : 1.5);
-      if (!payload.url || !["image", "video", undefined].includes(payload.mediaType)) return resolve(fallback);
-      const timer = window.setTimeout(() => resolve(fallback), 3500);
-      if ((payload.mediaType || "image") === "image") {
-        const image = new Image();
-        image.onload = () => { window.clearTimeout(timer); resolve(image.naturalWidth / image.naturalHeight || fallback); };
-        image.onerror = () => { window.clearTimeout(timer); resolve(fallback); };
-        image.src = payload.url;
-      } else {
-        const video = document.createElement("video");
-        video.onloadedmetadata = () => { window.clearTimeout(timer); resolve(video.videoWidth / video.videoHeight || fallback); };
-        video.onerror = () => { window.clearTimeout(timer); resolve(fallback); };
-        video.src = payload.url;
-      }
-    });
     const applyActions = async () => {
+      if (applyingActions.current) return;
+      applyingActions.current = true;
       try {
         const response = await fetch(`/api/weshop/actions?after=${actionCursor.current}`);
         const data = await response.json();
-        const additions = [];
-        for (const action of [...(data.actions || [])].sort((a, b) => (a.sequence || 0) - (b.sequence || 0))) {
+        const actions = [...(data.actions || [])].sort((a, b) => (a.sequence || 0) - (b.sequence || 0));
+        for (const action of actions) {
           actionCursor.current = Math.max(actionCursor.current, action.sequence || 0);
-          if (action.type !== "add-asset" || (!action.payload?.url && !action.payload?.content)) continue;
-          const payload = action.payload;
-          additions.push({ payload, aspect: await readAspect(payload) });
         }
+        // Insert immediately. Preloading every remote asset here used to delay an
+        // entire batch for up to 3.5 seconds and then made the visible <img>
+        // request it again. The rendered media now owns loading; its dimensions
+        // refine the fallback aspect after it arrives.
+        const additions = actions
+          .filter((action) => action.type === "add-asset" && (action.payload?.url || action.payload?.content))
+          .map((action) => {
+            const payload = action.payload;
+            return {
+              payload: { ...payload, actionSequence: action.sequence, batchId: payload.batchId || payload.provenance?.batchId || payload.provenance?.executionId || `publish-${action.sequence}`, batchIndex: payload.batchIndex ?? payload.provenance?.batchIndex ?? action.sequence },
+              aspect: payload.aspect || (payload.mediaType === "audio" ? 2.6 : payload.mediaType === "text" ? 1.35 : 1.5),
+            };
+          });
         if (!additions.length) return;
         let lastInserted = null;
         replaceItems((all) => {
@@ -205,7 +202,14 @@ export function WeshopWorkspace({ onExit, onSelectionChange, locale: controlledL
           const viewport = viewRef.current;
           for (const { payload, aspect } of additions) {
             if (next.some((item) => item.id === payload.id)) continue;
-            const index = next.length;
+            const siblings = next.filter((item) => item.batchId === payload.batchId);
+            const width = payload.width || 460;
+            const x = siblings.length
+              ? Math.max(...siblings.map((item) => item.x + item.width)) + 52
+              : next.length
+                ? Math.max(...next.map((item) => item.x + item.width)) + 140
+                : (180 - viewport.x) / viewport.scale;
+            const y = siblings.length ? siblings[0].y : (210 - viewport.y) / viewport.scale;
             lastInserted = {
               id: payload.id,
               kind: "result",
@@ -215,10 +219,13 @@ export function WeshopWorkspace({ onExit, onSelectionChange, locale: controlledL
               ...(payload.localPath ? { localPath: payload.localPath } : {}),
               title: payload.title || "Generated result",
               provenance: payload.provenance || { method: "agent-generation" },
+              batchId: payload.batchId,
+              batchIndex: payload.batchIndex,
+              actionSequence: payload.actionSequence,
               createdAt: payload.createdAt || new Date().toISOString(),
-              x: (180 - viewport.x) / viewport.scale + (index % 3) * 34,
-              y: (210 - viewport.y) / viewport.scale + (index % 4) * 30,
-              width: payload.width || 460,
+              x,
+              y,
+              width,
               aspect,
             };
             next.push(lastInserted);
@@ -240,6 +247,7 @@ export function WeshopWorkspace({ onExit, onSelectionChange, locale: controlledL
           });
         }
       } catch { /* The local canvas bridge may still be starting. */ }
+      finally { applyingActions.current = false; }
     };
     const timer = setInterval(applyActions, 1000);
     return () => clearInterval(timer);
@@ -422,8 +430,15 @@ export function WeshopWorkspace({ onExit, onSelectionChange, locale: controlledL
     const rect = stageRef.current.getBoundingClientRect();
     const gap = 48;
     const outer = 96;
-    const targetWidth = Math.max(760, Math.min(1900, rect.width / .76));
-    const ordered = [...items].sort((a, b) => (a.y - b.y) || (a.x - b.x));
+    const targetWidth = Math.max(1200, Math.min(4200, rect.width / .52));
+    const ordered = [...items].sort((a, b) => {
+      const aBatch = a.batchId || a.provenance?.batchId || a.provenance?.executionId || a.id;
+      const bBatch = b.batchId || b.provenance?.batchId || b.provenance?.executionId || b.id;
+      const aOrder = a.actionSequence || Date.parse(a.createdAt || 0) || 0;
+      const bOrder = b.actionSequence || Date.parse(b.createdAt || 0) || 0;
+      if (aBatch !== bBatch) return aOrder - bOrder;
+      return (a.batchIndex ?? aOrder) - (b.batchIndex ?? bOrder);
+    });
     const widths = ordered.map((item) => Math.max(180, Math.min(680, item.width)));
     const medianWidth = [...widths].sort((a, b) => a - b)[Math.floor(widths.length / 2)] || 420;
     const normalize = Math.max(.72, Math.min(1.12, 420 / medianWidth));
@@ -648,7 +663,11 @@ export function WeshopWorkspace({ onExit, onSelectionChange, locale: controlledL
             setView({ scale, x: rect.width / 2 - (item.x + item.width / 2) * scale, y: rect.height / 2 - (item.y + item.width / item.aspect / 2) * scale });
           }}
         >
-          {(item.mediaType || "image") === "image" && <img src={item.src} alt={item.title} draggable="false" />}
+          {(item.mediaType || "image") === "image" && <img src={item.src} alt={item.title} draggable="false" onLoad={(event) => {
+            const aspect = event.currentTarget.naturalWidth / event.currentTarget.naturalHeight;
+            if (!Number.isFinite(aspect) || aspect <= 0 || Math.abs(aspect - item.aspect) < .01) return;
+            replaceItems((all) => all.map((candidate) => candidate.id === item.id ? { ...candidate, aspect } : candidate), { record: false });
+          }} />}
           {item.mediaType === "video" && <><video src={item.src} controls preload="metadata" onPointerDown={(event) => event.stopPropagation()} /><button type="button" className="video-drag-handle" onPointerDown={(event) => beginDrag(event, item)} onDoubleClick={(event) => event.stopPropagation()} aria-label={`Move ${item.title}`} title={item.title}><DotsSix size={15} weight="bold" /><span>{item.title}</span></button></>}
           {item.mediaType === "audio" && <div className="audio-card"><MusicNotes size={30} weight="duotone" /><strong>{item.title}</strong><audio src={item.src} controls onPointerDown={(event) => event.stopPropagation()} /></div>}
           {item.mediaType === "text" && <div className="text-card"><TextT size={19} /><p>{item.content}</p></div>}

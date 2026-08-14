@@ -18,6 +18,8 @@ const actionFile = process.env.WESHOP_ACTIONS_FILE || path.join(os.tmpdir(), "we
 const requestFile = process.env.WESHOP_REQUESTS_FILE || path.join(os.tmpdir(), "weshop-2-0-canvas-requests.jsonl");
 const completionFile = process.env.WESHOP_COMPLETIONS_FILE || path.join(os.tmpdir(), "weshop-2-0-canvas-request-completions.jsonl");
 const progressFile = process.env.WESHOP_PROGRESS_FILE || path.join(os.tmpdir(), "weshop-2-0-canvas-progress.json");
+let lastActionSequence = 0;
+const nextActionSequence = () => (lastActionSequence = Math.max(Date.now(), lastActionSequence + 1));
 
 /* ── WeShop OpenAPI (server-side; the key never leaves this process) ───────── */
 
@@ -148,6 +150,8 @@ const toolSchemas = [
         localPath: { type: "string", description: "Absolute path to a local image file." },
         url: { type: "string", description: "HTTPS image URL. Prefer this for remote/generated results so the canvas can display it directly." },
         width: { type: "number", minimum: 120, maximum: 1200 },
+        batchId: { type: "string", description: "Stable generation batch ID. Use the executionId for every output of one generation." },
+        batchIndex: { type: "number", minimum: 0, description: "Zero-based output order within batchId." },
         provenance: { type: "object", description: "How the image was created, including method, prompt, sources, agent, executionId, and model when available.", additionalProperties: true },
       },
       anyOf: [{ required: ["localPath"] }, { required: ["url"] }],
@@ -165,6 +169,8 @@ const toolSchemas = [
         localPath: { type: "string", description: "Absolute path only for a genuinely local-only generated image." },
         url: { type: "string", description: "Returned HTTPS image URL. Preferred for WeShop generation results." },
         width: { type: "number", minimum: 120, maximum: 1200 },
+        batchId: { type: "string", description: "Stable generation batch ID. Use the executionId for every output of one generation." },
+        batchIndex: { type: "number", minimum: 0, description: "Zero-based output order within batchId." },
         provenance: { type: "object", description: "Complete generation lineage including agent, executionId, prompt/task, and source item IDs.", additionalProperties: true },
       },
       anyOf: [{ required: ["localPath"] }, { required: ["url"] }],
@@ -184,6 +190,8 @@ const toolSchemas = [
         url: { type: "string" },
         content: { type: "string", description: "Inline content, required for text when no file or URL is used." },
         width: { type: "number", minimum: 120, maximum: 1200 },
+        batchId: { type: "string", description: "Stable generation batch ID. Use the executionId for every output of one generation." },
+        batchIndex: { type: "number", minimum: 0, description: "Zero-based output order within batchId." },
         provenance: { type: "object", additionalProperties: true },
       },
       anyOf: [{ required: ["localPath"] }, { required: ["url"] }, { required: ["content"] }],
@@ -271,7 +279,7 @@ async function executeTool(name, input) {
       if (!input.localPath && !input.url && !input.content) throw new Error("localPath, url, or content is required");
       const publishingResult = name !== "weshop_canvas_add_image";
       const action = {
-        sequence: Date.now(),
+        sequence: nextActionSequence(),
         type: "add-asset",
         payload: {
           id: `${publishingResult ? "result" : (input.kind || "result")}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
@@ -282,6 +290,8 @@ async function executeTool(name, input) {
           ...(input.url ? { url: input.url } : {}),
           ...(input.content ? { content: input.content } : {}),
           width: input.width || 460,
+          ...(input.batchId ? { batchId: input.batchId } : {}),
+          ...(Number.isFinite(input.batchIndex) ? { batchIndex: input.batchIndex } : {}),
           provenance: input.provenance || { method: "agent-generation" },
           createdAt: new Date().toISOString(),
         },

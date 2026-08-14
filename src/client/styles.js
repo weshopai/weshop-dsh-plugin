@@ -187,6 +187,7 @@ body[data-ds-dark-theme] .canvas-api-notice p { color: #d7c895; }
 body[data-ds-dark-theme] .canvas-controls, body[data-ds-dark-theme] .canvas-tool-controls, body[data-ds-dark-theme] .selection-actions { border-color: rgba(232,240,231,.12); background: rgba(37,42,37,.94); }
 body[data-ds-dark-theme] .canvas-controls button, body[data-ds-dark-theme] .canvas-tool-controls button, body[data-ds-dark-theme] .selection-actions button, body[data-ds-dark-theme] .selection-actions a { color: #dce5dc; }
 body[data-ds-dark-theme] .canvas-controls button:hover, body[data-ds-dark-theme] .canvas-tool-controls button:hover, body[data-ds-dark-theme] .selection-actions button:hover, body[data-ds-dark-theme] .selection-actions a:hover { background: #424b42; }
+body[data-ds-dark-theme] .canvas-tool-controls button.is-active { color: #132217; background: #b9e7c4; box-shadow: inset 0 0 0 1px rgba(255,255,255,.35), 0 2px 7px rgba(93,190,125,.22); }
 body[data-ds-dark-theme] .empty-state { border-color: #4d584e; color: #a6b1a5; background: rgba(31,36,31,.82); }
 body[data-ds-dark-theme] .empty-state strong { color: #edf3ec; }
 body[data-ds-dark-theme] .api-key-dialog, body[data-ds-dark-theme] .text-dialog, body[data-ds-dark-theme] .edit-dialog { color: #e9f0e8; background: #242a24; }
