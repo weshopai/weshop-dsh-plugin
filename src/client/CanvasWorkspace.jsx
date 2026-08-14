@@ -7,10 +7,18 @@ import {
 import { initialLocale, saveLocale, translator } from "./i18n.js";
 
 const STORAGE_KEY = "weshop-2-0-dsh:spaces:v1";
+const ACTIVE_CANVAS_STORAGE_KEY = "weshop-2-0-dsh:active-space:v1";
 const blankCanvas = (index = 1) => ({ id: `canvas-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`, title: index === 1 ? "Untitled space" : `Untitled space ${index}`, items: [], view: { x: 0, y: 0, scale: .72 } });
 function restoreCanvases() {
   try { const saved = JSON.parse(localStorage.getItem(STORAGE_KEY)); if (saved?.length) return saved; } catch { /* Start clean. */ }
   return [blankCanvas()];
+}
+function restoreActiveCanvasId(canvases) {
+  try {
+    const savedId = localStorage.getItem(ACTIVE_CANVAS_STORAGE_KEY);
+    if (savedId && canvases.some((canvas) => canvas.id === savedId)) return savedId;
+  } catch { /* Use the first available canvas. */ }
+  return canvases[0].id;
 }
 
 export function WeshopWorkspace({ onExit, onSelectionChange, locale: controlledLocale, onLocaleChange, embedded = false, initialActionCursor = Date.now() }) {
@@ -19,7 +27,7 @@ export function WeshopWorkspace({ onExit, onSelectionChange, locale: controlledL
   const t = useMemo(() => translator(locale), [locale]);
   const changeLocale = (next) => { saveLocale(next); if (onLocaleChange) onLocaleChange(next); else setLocalLocale(next); };
   const [canvases, setCanvases] = useState(restoreCanvases);
-  const [activeCanvasId, setActiveCanvasId] = useState(canvases[0].id);
+  const [activeCanvasId, setActiveCanvasId] = useState(() => restoreActiveCanvasId(canvases));
   const activeInitial = canvases.find((canvas) => canvas.id === activeCanvasId) || canvases[0];
   const [items, setItems] = useState(activeInitial.items);
   const [view, setView] = useState(activeInitial.view);
@@ -82,6 +90,7 @@ export function WeshopWorkspace({ onExit, onSelectionChange, locale: controlledL
   }, [activeCanvasId, items, title, view]);
   useEffect(() => { viewRef.current = view; }, [view]);
   useEffect(() => { localStorage.setItem(STORAGE_KEY, JSON.stringify(canvases)); }, [canvases]);
+  useEffect(() => { localStorage.setItem(ACTIVE_CANVAS_STORAGE_KEY, activeCanvasId); }, [activeCanvasId]);
 
   const canvasState = useMemo(() => {
     const describeItem = ({ src, localPath, ...item }) => {
