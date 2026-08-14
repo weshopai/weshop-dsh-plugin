@@ -192,6 +192,30 @@ const CSS = `
 .canvas-chat-input .canvas-chat-stop { color: #864c45; background: #f3e9e6; }
 .canvas-chat-compose > small { display: block; padding: 7px 3px 0; color: #a0a19b; font-size: 8px; }
 .canvas-chat-error { margin: 0 2px 8px; color: #a0443b; font-size: 9px; line-height: 1.4; }
+.canvas-question { max-height: min(62vh, 620px); overflow: auto; padding: 16px; border-top: 1px solid #dfe1da; background: #fff; box-shadow: 0 -18px 48px rgba(29,33,29,.08); }
+.canvas-question-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 12px; }
+.canvas-question-head > div { display: grid; gap: 5px; }
+.canvas-question-head span { color: #72857a; font-size: 8px; font-weight: 750; letter-spacing: .12em; text-transform: uppercase; }
+.canvas-question-head strong { font: 680 14px/1.4 "Manrope", system-ui, sans-serif; }
+.canvas-question-head > button { width: 28px; height: 28px; flex: none; display: grid; place-items: center; padding: 0; border: 0; border-radius: 8px; color: #787a74; background: #f0f0eb; cursor: pointer; }
+.canvas-question-detail { max-height: 110px; overflow: auto; margin: -2px 0 12px; padding: 10px 11px; border-radius: 9px; color: #686b66; background: #f4f4ef; font-size: 10px; line-height: 1.55; white-space: pre-wrap; }
+.canvas-question-options { display: grid; gap: 6px; margin-bottom: 9px; }
+.canvas-question-options > button { width: 100%; display: grid; grid-template-columns: 25px minmax(0, 1fr); align-items: center; gap: 8px; padding: 9px; border: 1px solid #e2e3dc; border-radius: 10px; text-align: left; color: #353733; background: #fafaf7; cursor: pointer; }
+.canvas-question-options > button:hover { border-color: #bfc8c1; background: #f5f7f3; }
+.canvas-question-options > button.is-selected { border-color: #718d7e; background: #edf3ee; box-shadow: 0 0 0 2px rgba(83,117,98,.08); }
+.canvas-question-options i { width: 24px; height: 24px; display: grid; place-items: center; border-radius: 7px; color: #687069; background: #eceee9; font-size: 10px; font-style: normal; }
+.canvas-question-options .is-selected i { color: #fff; background: #4d6d5d; }
+.canvas-question-options span { min-width: 0; display: grid; gap: 2px; }
+.canvas-question-options b { font-size: 11px; font-weight: 650; }
+.canvas-question-options small { color: #868983; font-size: 9px; line-height: 1.35; }
+.canvas-question > textarea { width: 100%; resize: vertical; padding: 10px 11px; border: 1px solid #dedfd8; border-radius: 10px; outline: 0; color: #30322e; background: #fafaf7; font: 11px/1.5 "DM Sans", system-ui, sans-serif; }
+.canvas-question > textarea:focus { border-color: #82978b; box-shadow: 0 0 0 3px rgba(71,120,95,.08); }
+.canvas-question-actions { display: flex; align-items: center; justify-content: flex-end; gap: 7px; margin-top: 10px; }
+.canvas-question-actions > span { margin-right: auto; color: #999b95; font-size: 9px; }
+.canvas-question-actions button { height: 32px; padding: 0 12px; border: 0; border-radius: 9px; color: #535550; background: #eeefe9; font-size: 10px; cursor: pointer; }
+.canvas-question-actions button.is-primary { color: white; background: #2d302c; }
+.canvas-question-actions button:disabled, .canvas-question-head button:disabled { opacity: .42; cursor: default; }
+.canvas-approval { max-height: none; }
 @keyframes chat-rise { from { opacity: 0; transform: translateY(5px); } }
 
 @media (max-width: 720px) {

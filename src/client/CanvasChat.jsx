@@ -1,6 +1,156 @@
 import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { ArrowUp, Stop, X } from "@phosphor-icons/react";
 
+function CanvasQuestion({ wait }) {
+  const questions = wait.payload.questions || [];
+  const [index, setIndex] = useState(0);
+  const [drafts, setDrafts] = useState(() => questions.map(() => ({ selected: [], custom: "", skipped: false })));
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+  const question = questions[index];
+  const draft = drafts[index];
+
+  if (!question || !draft) return null;
+
+  const update = (next) => {
+    setDrafts((current) => current.map((item, itemIndex) => itemIndex === index ? next(item) : item));
+    setError("");
+  };
+  const choose = (label) => update((current) => ({
+    ...current,
+    selected: question.multiSelect
+      ? current.selected.includes(label)
+        ? current.selected.filter((item) => item !== label)
+        : [...current.selected, label]
+      : [label],
+    custom: question.multiSelect ? current.custom : "",
+    skipped: false,
+  }));
+  const completed = (value) => value.skipped || value.selected.length > 0 || value.custom.trim() !== "";
+  const submit = async (values = drafts) => {
+    const missing = values.findIndex((value) => !completed(value));
+    if (missing >= 0) {
+      setIndex(missing);
+      setError("请选择一个选项或输入回答");
+      return;
+    }
+    setBusy(true);
+    setError("");
+    try {
+      const receipt = await wait.respond({
+        ok: true,
+        value: {
+          sessionId: wait.sessionId,
+          answer: {
+            answers: questions.map((item, itemIndex) => {
+              const value = values[itemIndex];
+              const custom = value.custom.trim();
+              return {
+                id: item.id,
+                selected: value.skipped || (custom && !item.multiSelect) ? [] : value.selected,
+                ...(custom ? { custom } : {}),
+              };
+            }),
+          },
+        },
+      });
+      if (!receipt.accepted) throw new Error(`回答未被接受：${receipt.reason}`);
+    } catch (reason) {
+      setBusy(false);
+      setError(reason instanceof Error ? reason.message : String(reason));
+    }
+  };
+  const continueFlow = () => {
+    if (!completed(draft)) {
+      setError("请选择一个选项或输入回答");
+      return;
+    }
+    if (index < questions.length - 1) setIndex(index + 1);
+    else void submit();
+  };
+  const skip = () => {
+    const values = drafts.map((item, itemIndex) => itemIndex === index
+      ? { selected: [], custom: "", skipped: true }
+      : item);
+    setDrafts(values);
+    if (index < questions.length - 1) setIndex(index + 1);
+    else void submit(values);
+  };
+  const cancel = async () => {
+    setBusy(true);
+    try {
+      const receipt = await wait.respond({ ok: false, error: { code: "cancelled", message: "the user closed this question request", details: {} } });
+      if (!receipt.accepted) throw new Error(`取消未被接受：${receipt.reason}`);
+    } catch (reason) {
+      setBusy(false);
+      setError(reason instanceof Error ? reason.message : String(reason));
+    }
+  };
+
+  return (
+    <section className="canvas-question" aria-labelledby={`canvas-question-${question.id}`}>
+      <div className="canvas-question-head">
+        <div>
+          <span>{question.header || "需要你的选择"}</span>
+          <strong id={`canvas-question-${question.id}`}>{question.question}</strong>
+        </div>
+        <button type="button" onClick={() => void cancel()} disabled={busy} aria-label="取消问题"><X size={14} /></button>
+      </div>
+      {question.detail && <p className="canvas-question-detail">{question.detail}</p>}
+      {(question.options || []).length > 0 && (
+        <div className="canvas-question-options">
+          {question.options.map((option, optionIndex) => {
+            const selected = draft.selected.includes(option.label);
+            return (
+              <button type="button" key={`${option.label}-${optionIndex}`} className={selected ? "is-selected" : ""} onClick={() => choose(option.label)} disabled={busy}>
+                <i>{question.multiSelect ? (selected ? "✓" : "") : optionIndex + 1}</i>
+                <span><b>{option.label.replace(/\s*[（(](?:推荐|recommended)[）)]\s*$/i, "")}</b>{option.description && <small>{option.description}</small>}</span>
+              </button>
+            );
+          })}
+        </div>
+      )}
+      <textarea
+        value={draft.custom}
+        onChange={(event) => update((current) => ({ ...current, custom: event.target.value, selected: question.multiSelect ? current.selected : [], skipped: false }))}
+        placeholder={(question.options || []).length ? "或者输入自己的答案" : "输入你的答案"}
+        rows={2}
+        disabled={busy}
+      />
+      {error && <div className="canvas-chat-error">{error}</div>}
+      <div className="canvas-question-actions">
+        <span>{index + 1} / {questions.length}</span>
+        <button type="button" onClick={skip} disabled={busy}>跳过</button>
+        <button type="button" className="is-primary" onClick={continueFlow} disabled={busy}>{index < questions.length - 1 ? "下一题" : "提交"}</button>
+      </div>
+    </section>
+  );
+}
+
+function CanvasApproval({ wait }) {
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+  const answer = async (outcome) => {
+    setBusy(true);
+    setError("");
+    try {
+      const receipt = await wait.respond({ ok: true, value: { sessionId: wait.sessionId, approvalId: wait.payload.approvalId, outcome } });
+      if (!receipt.accepted) throw new Error(`审批未被接受：${receipt.reason}`);
+    } catch (reason) {
+      setBusy(false);
+      setError(reason instanceof Error ? reason.message : String(reason));
+    }
+  };
+  return (
+    <section className="canvas-question canvas-approval">
+      <div className="canvas-question-head"><div><span>需要授权</span><strong>{wait.payload.reason || wait.payload.toolName || "允许执行此操作？"}</strong></div></div>
+      {wait.payload.toolName && <p className="canvas-question-detail">工具：{wait.payload.toolName}</p>}
+      {error && <div className="canvas-chat-error">{error}</div>}
+      <div className="canvas-question-actions"><span /><button type="button" onClick={() => void answer("rejected")} disabled={busy}>拒绝</button><button type="button" className="is-primary" onClick={() => void answer("allowed-once")} disabled={busy}>允许一次</button></div>
+    </section>
+  );
+}
+
 function textFromContent(content) {
   if (!Array.isArray(content)) return "";
   return content
@@ -43,6 +193,8 @@ export function CanvasChat({ session, sessionTitle, onExit }) {
     () => session.getSnapshot(),
   );
   const rows = useMemo(() => chatRows(snapshot), [snapshot]);
+  const pendingInteraction = snapshot?.pending?.find((item) => item.kind === "question")
+    || snapshot?.pending?.find((item) => item.kind === "approval");
   const [draft, setDraft] = useState("");
   const [sending, setSending] = useState(false);
   const [error, setError] = useState("");
@@ -101,7 +253,11 @@ export function CanvasChat({ session, sessionTitle, onExit }) {
         ))}
       </div>
 
-      <footer className="canvas-chat-compose">
+      {pendingInteraction?.kind === "question" ? (
+        <CanvasQuestion key={pendingInteraction.key} wait={pendingInteraction} />
+      ) : pendingInteraction?.kind === "approval" ? (
+        <CanvasApproval key={pendingInteraction.key} wait={pendingInteraction} />
+      ) : <footer className="canvas-chat-compose">
         {error && <div className="canvas-chat-error">{error}</div>}
         <div className="canvas-chat-input">
           <textarea
@@ -128,7 +284,7 @@ export function CanvasChat({ session, sessionTitle, onExit }) {
           )}
         </div>
         <small>Enter 发送 · Shift + Enter 换行</small>
-      </footer>
+      </footer>}
     </aside>
   );
 }
