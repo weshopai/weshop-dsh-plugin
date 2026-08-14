@@ -3,6 +3,11 @@
   "version": "0.1.13",
   "private": true,
   "description": "Native Cordis WeShop canvas, tools, skills, and Web UI for DeepSeek Harness",
+  "license": "SEE LICENSE IN LICENSE",
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/weshopai/weshop-dsh-plugin.git"
+  },
   "type": "module",
   "main": "lib/index.js",
   "exports": {
@@ -17,6 +22,7 @@
     "skills/**",
     "presets/**",
     "assets/**",
+    "README.zh-CN.md",
     "cordis.patch.yml"
   ],
   "dsh": {

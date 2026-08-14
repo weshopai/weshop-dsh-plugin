@@ -1,28 +1,123 @@
-# Native DeepSeek Harness plugin
+# WeShop 2.0 for DeepSeek Harness
 
-This package mounts WeShop as one native Cordis plugin with four contributions:
+English | [简体中文](README.zh-CN.md)
 
-- Host HTTP routes under `/api/weshop/*`.
-- Native `ctx.tools` registrations for canvas and WeShop OpenAPI operations.
-- Bundled `ctx.skills` registrations for opening and operating the canvas.
-- A packaged `weshop-canvas` agent preset, installed on first activation and migrated from the known MCP-era preset with a backup.
-- A browser client plugin for the canvas overlay and sidebar action.
+WeShop 2.0 is an AI visual workspace for e-commerce creation inside [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness). Select products, models, or reference images on an infinite canvas, describe the desired result in natural language, and use WeShop OpenAPI to create product photography, virtual try-on, background replacement, image edits, and video assets without leaving the conversation.
 
-It does not launch an MCP child process. Cordis owns every registration and removes it when the plugin unloads.
+> [!IMPORTANT]
+> **Install and successfully run DeepSeek Harness before installing this plugin.** This repository is a Harness plugin, not a standalone application.
 
-The browser contribution does not open when the preset is selected. It keeps the normal Harness conversation visible while generation runs, then opens a full-screen canvas studio after a native publish-result action succeeds. The studio includes a compact live view of the same Harness session, can send prompts back into it, and answers its pending question and approval interactions. The preset-only footer button can open it manually.
+## Highlights
 
-Remote generation URLs are published directly into the canvas. Local asset copying remains available only for local-only tool outputs and user uploads. Selected canvas assets can be downloaded or deleted from the floating action bar.
+- Native Cordis Host and browser plugin; no MCP child process.
+- Infinite canvas with marquee multi-selection, grouped movement, undo, download, delete, zoom, and pan tools.
+- Synchronized Harness conversation with `@` references for selected canvas items.
+- Bundled `weshop-canvas` agent preset and WeShop Skills.
+- Automatic publication of generated images, video, audio, and text to the canvas.
+- Secure API Key configuration in the canvas or through `WESHOP_API_KEY`.
+- Chinese and English interface with automatic locale detection and manual switching.
+- Portable `.tgz` package for installation on another Harness machine.
 
-Canvas item mutations keep an in-memory undo history. Users can undo from the top bar or with Command/Ctrl+Z; keyboard deletion is disabled while any text-editing control has focus.
+## Prerequisites: install Harness first
 
-The plugin exposes a masked `apiKey` field in DSH's plugin configuration UI. The key stays in the Host process and is never returned to the browser or model. `WESHOP_API_KEY` remains a supported environment fallback; the canvas shows a setup notice when neither source is configured.
-
-## Build
+Install Node.js, then start the official Harness Web UI once:
 
 ```bash
-pnpm install
-pnpm build
+npx @deepseek-ai/dsh web
 ```
 
-Install `@weshop/dsh-weshop-2-0` as a file dependency in a DSH Web profile, then insert the package as a single Cordis row. Set `WESHOP_API_KEY` in the Harness environment for generation tools.
+Harness should open at `http://127.0.0.1:3080`. Stop it before changing the Web profile.
+
+Alternatively, follow the official [DeepSeek Harness source installation instructions](https://github.com/deepseek-ai/deepseek-harness#run).
+
+## Install the WeShop plugin
+
+### 1. Build a portable package
+
+Access to this private repository is required.
+
+```bash
+git clone git@github.com:weshopai/weshop-dsh-plugin.git
+cd weshop-dsh-plugin
+corepack enable
+pnpm install --frozen-lockfile
+pnpm build
+pnpm pack
+```
+
+This creates a file similar to `weshop-dsh-weshop-2-0-0.1.13.tgz`.
+
+### 2. Install it into the Harness Web profile
+
+```bash
+cd ~/.dsh/profiles/web
+pnpm add /absolute/path/to/weshop-dsh-weshop-2-0-0.1.13.tgz
+```
+
+Open `~/.dsh/profiles/web/package.json` and append `@weshop/dsh-weshop-2-0` to `dsh.profile.bundles`. Preserve the bundles already installed by Harness:
+
+```json
+{
+  "dsh": {
+    "profile": {
+      "bundles": [
+        "@deepseek-ai/dsh-base",
+        "@deepseek-ai/dsh-web-app",
+        "@weshop/dsh-weshop-2-0"
+      ]
+    }
+  }
+}
+```
+
+If an older `@weshop/dsh-canvas` plugin is installed, remove it from dependencies and bundles before continuing. Running both implementations can cause duplicate canvas or `shell.overlay` loader errors.
+
+### 3. Restart Harness
+
+```bash
+npx @deepseek-ai/dsh web
+```
+
+Create or open a task using the **WeShop Canvas** preset. The plugin installs its bundled preset on first activation.
+
+## Configure WeShop OpenAPI
+
+Open the canvas and select **Configure API Key** in the top bar. The key is saved by the local Harness Host with restricted file permissions and is never returned to the browser, canvas state, or model.
+
+You may instead provide the key before starting Harness:
+
+```bash
+export WESHOP_API_KEY="your-key"
+npx @deepseek-ai/dsh web
+```
+
+Get a key from [WeShop OpenAPI](https://open.weshop.ai/authorization/apikey).
+
+## Development
+
+```bash
+pnpm install --frozen-lockfile
+pnpm build
+pnpm pack --dry-run
+```
+
+Package entry points and runtime contributions:
+
+- `lib/index.js`: Cordis Host plugin, tools, Skills, routes, and private configuration.
+- `lib/client.js`: browser canvas and synchronized conversation UI.
+- `cordis.patch.yml`: bundle composition entry.
+- `presets/weshop-canvas/`: bundled WeShop agent preset.
+- `skills/`: bundled canvas and WeShop OpenAPI instructions.
+
+## Portability and security
+
+- The package contains compiled Host and browser entries, presets, Skills, and required assets.
+- The target computer must already have a working Harness Web profile.
+- API Keys and generated local assets are intentionally excluded from the package and must be configured on each machine.
+- Canvas data is stored locally by the browser; it is not embedded in the installation archive.
+
+## License
+
+This software is source-available under the [PolyForm Noncommercial License 1.0.0](LICENSE). Personal, research, educational, charitable, and other noncommercial uses are permitted. Commercial use requires separate written permission from WeShop AI.
+
+This is not an OSI-approved open-source license because it restricts commercial use.
