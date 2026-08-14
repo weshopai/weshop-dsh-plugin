@@ -1,0 +1,2 @@
+name: WeShop 画布模式
+description: 对话与画布同屏的 WeShop 创作模式:调用 weshop skill 生图并自动发布到画布,请求失败自动重试。

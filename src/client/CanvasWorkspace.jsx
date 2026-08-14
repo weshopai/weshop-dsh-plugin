@@ -12,7 +12,7 @@ function restoreCanvases() {
   return [blankCanvas()];
 }
 
-export function WeshopWorkspace({ onExit, embedded = false }) {
+export function WeshopWorkspace({ onExit, embedded = false, initialActionCursor = Date.now() }) {
   const [canvases, setCanvases] = useState(restoreCanvases);
   const [activeCanvasId, setActiveCanvasId] = useState(canvases[0].id);
   const activeInitial = canvases.find((canvas) => canvas.id === activeCanvasId) || canvases[0];
@@ -35,7 +35,7 @@ export function WeshopWorkspace({ onExit, embedded = false }) {
   const stageRef = useRef(null);
   const gesture = useRef(null);
   const fileRef = useRef(null);
-  const actionCursor = useRef(Date.now());
+  const actionCursor = useRef(initialActionCursor);
 
   useEffect(() => {
     setCanvases((all) => all.map((canvas) => canvas.id === activeCanvasId ? { ...canvas, title, items, view } : canvas));
