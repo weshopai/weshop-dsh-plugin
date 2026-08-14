@@ -5,7 +5,7 @@
 **内置于 DeepSeek Harness 的 AI 电商视觉工作台。**
 
 [![License](https://img.shields.io/badge/license-MIT-2ea44f.svg)](./LICENSE)
-[![Version](https://img.shields.io/badge/version-0.1.28-282828.svg)]()
+[![Version](https://img.shields.io/badge/version-0.1.0-282828.svg)]()
 [![Platform](https://img.shields.io/badge/platform-DeepSeek%20Harness%20plugin-282828.svg)]()
 [![English](https://img.shields.io/badge/Language-English-7530FE.svg)](./README.md)
 
@@ -69,47 +69,27 @@ Harness 默认打开在 `http://127.0.0.1:3080`。修改 Web profile 前，请�
 
 也可以按照官方的 [DeepSeek Harness 源码安装说明](https://github.com/deepseek-ai/deepseek-harness#run)进行安装。
 
-### 1. 从 GitHub Packages 安装
+### 1. 安装 WeShop
 
-需要拥有本 private 仓库访问权限，以及一个具备 `read:packages` 的 GitHub classic personal access token。首次执行以下登录：
-
-```bash
-npm login --scope=@weshopai --auth-type=legacy --registry=https://npm.pkg.github.com
-```
-
-然后安装到 Harness Web profile：
+关闭 Harness 后，只需运行一条命令：
 
 ```bash
-cd ~/.dsh/profiles/web
-pnpm add @weshopai/dsh-weshop-2-0@latest
+npx weshop-dsh-plugin setup
 ```
 
-### 2. 启用 Harness bundle
+安装器会将插件安装到 Harness Web profile、启用 bundle，并自动迁移旧版 WeShop 插件。无需 GitHub 账号或 access token。
 
-打开 `~/.dsh/profiles/web/package.json`，在 `dsh.profile.bundles` 中追加 `@weshopai/dsh-weshop-2-0`。不要删除 Harness 已有的 bundle：
+需要更新时再次运行同一条命令即可。
 
-```json
-{
-  "dsh": {
-    "profile": {
-      "bundles": [
-        "@deepseek-ai/dsh-base",
-        "@deepseek-ai/dsh-web-app",
-        "@weshopai/dsh-weshop-2-0"
-      ]
-    }
-  }
-}
-```
-
-已经安装过的用户可更新：
+### 2. 重启 Harness
 
 ```bash
-cd ~/.dsh/profiles/web
-pnpm update @weshopai/dsh-weshop-2-0
+npx @deepseek-ai/dsh web
 ```
 
-### 备选：构建可迁移安装包
+新建或打开使用 **WeShop 画布模式** Preset 的任务。WeShop for DeepSeek Harness 会在第一次启用时安装随包提供的 Preset。
+
+### 高级用法：构建可迁移安装包
 
 克隆本 private 仓库需要相应的 GitHub 权限。
 
@@ -122,26 +102,18 @@ pnpm build
 pnpm pack
 ```
 
-完成后会生成类似 `weshopai-dsh-weshop-2-0-0.1.28.tgz` 的版本化文件。
+完成后会生成类似 `weshop-dsh-plugin-0.1.0.tgz` 的版本化文件。
 
 安装到 Harness Web profile：
 
 ```bash
-PLUGIN_TARBALL="/你的绝对路径/weshopai-dsh-weshop-2-0-0.1.28.tgz"
+PLUGIN_TARBALL="/你的绝对路径/weshop-dsh-plugin-0.1.0.tgz"
 cd ~/.dsh/profiles/web
 pnpm add "$PLUGIN_TARBALL"
 ```
 
 > **⚠️ 从 `@weshop/dsh-canvas` 升级**
 > 如果安装过旧版 `@weshop/dsh-canvas`，请先从 dependencies 和 bundles 中删除。新旧实现同时运行可能造成重复画布或 `shell.overlay` loader 报错。
-
-### 3. 重启 Harness
-
-```bash
-npx @deepseek-ai/dsh web
-```
-
-新建或打开使用 **WeShop 画布模式** Preset 的任务。WeShop for DeepSeek Harness 会在第一次启用时安装随包提供的 Preset。
 
 ## ⚙️ 配置 WeShop OpenAPI
 

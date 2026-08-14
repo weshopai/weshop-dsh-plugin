@@ -95,7 +95,7 @@
 # ── skills ──────────────────────────────────────────────────────────────────
 
 # The weshop skills (open-weshop-2-0 / inspect-weshop-canvas / weshop-openapi)
-# ship with the `@weshopai/dsh-weshop-2-0` plugin; the skill registry exposes
+# ship with the `weshop-dsh-plugin` plugin; the skill registry exposes
 # them for agents on this preset and `tool-skill` exposes the catalog.
 - id: skill-filesystem
   name: '@deepseek-ai/dsh-skill-filesystem'

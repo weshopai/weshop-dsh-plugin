@@ -330,8 +330,8 @@ export function injectWeshopStyles() {
   if (injected || typeof document === "undefined") return;
   injected = true;
   const tag = document.createElement("style");
-  tag.dataset.plugin = "@weshopai/dsh-weshop-2-0";
-  tag.dataset.pluginCss = "@weshopai/dsh-weshop-2-0/styles";
+  tag.dataset.plugin = "weshop-dsh-plugin";
+  tag.dataset.pluginCss = "weshop-dsh-plugin/styles";
   tag.textContent = CSS;
   document.head.appendChild(tag);
 }

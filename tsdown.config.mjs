@@ -1,4 +1,4 @@
-const PLUGIN_ID = "@weshopai/dsh-weshop-2-0";
+const PLUGIN_ID = "weshop-dsh-plugin";
 
 const nodeConfig = {
   name: `${PLUGIN_ID}/node`,
