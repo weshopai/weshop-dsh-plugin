@@ -1,8 +1,8 @@
-# WeShop 2.0 for DeepSeek Harness
+# WeShop for DeepSeek Harness
 
 [English](README.md) | 简体中文
 
-WeShop 2.0 是运行在 [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) 内的 AI 电商视觉工作台。你可以在无限画布上选择商品、模特或参考图，通过自然语言描述目标，并调用 WeShop OpenAPI 完成商品摄影、虚拟试穿、背景替换、图片编辑和视频生成，全程无需离开当前对话。
+WeShop for DeepSeek Harness 是运行在 [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) 内的 AI 电商视觉工作台。你可以在无限画布上选择商品、模特或参考图，通过自然语言描述目标，并调用 WeShop OpenAPI 完成商品摄影、虚拟试穿、背景替换、图片编辑和视频生成，全程无需离开当前对话。
 
 > [!IMPORTANT]
 > **安装本插件前，必须先安装并成功运行 DeepSeek Harness。** 本仓库是 Harness 插件，不是独立应用。
@@ -30,7 +30,7 @@ Harness 默认打开在 `http://127.0.0.1:3080`。修改 Web profile 前，请�
 
 也可以按照官方的 [DeepSeek Harness 源码安装说明](https://github.com/deepseek-ai/deepseek-harness#run)进行安装。
 
-## 安装 WeShop 插件
+## 安装 WeShop for DeepSeek Harness
 
 ### 1. 构建可迁移安装包
 
@@ -45,12 +45,12 @@ pnpm build
 pnpm pack
 ```
 
-完成后会生成类似 `weshop-dsh-weshop-2-0-0.1.22.tgz` 的版本化文件。
+完成后会生成类似 `weshop-dsh-weshop-2-0-0.1.23.tgz` 的版本化文件。
 
 ### 2. 安装到 Harness Web profile
 
 ```bash
-PLUGIN_TARBALL="/你的绝对路径/weshop-dsh-weshop-2-0-0.1.22.tgz"
+PLUGIN_TARBALL="/你的绝对路径/weshop-dsh-weshop-2-0-0.1.23.tgz"
 cd ~/.dsh/profiles/web
 pnpm add "$PLUGIN_TARBALL"
 ```
@@ -79,7 +79,7 @@ pnpm add "$PLUGIN_TARBALL"
 npx @deepseek-ai/dsh web
 ```
 
-新建或打开使用 **WeShop 画布模式** Preset 的任务。插件会在第一次启用时安装随包提供的 Preset。
+新建或打开使用 **WeShop 画布模式** Preset 的任务。WeShop for DeepSeek Harness 会在第一次启用时安装随包提供的 Preset。
 
 ## 配置 WeShop OpenAPI
 

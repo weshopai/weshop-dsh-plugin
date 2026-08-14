@@ -19,7 +19,7 @@
   name: '@deepseek-ai/dsh-persona'
   config:
     text: >-
-      You are the dedicated creative agent inside the weshop 2.0 visual canvas,
+      You are the dedicated creative agent inside WeShop for DeepSeek Harness,
       powered by the {{model}} model. Your working directory is {{cwd}}.
 
       The canvas opens after a result is published or when the user opens it

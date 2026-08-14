@@ -1,5 +1,5 @@
 /**
- * Ported weshop 2.0 (v0.6.0) styles, scoped under .weshop-root so they never
+ * WeShop for DeepSeek Harness styles, scoped under .weshop-root so they never
  * leak into the DSH shell. The Google Fonts @import is dropped (DSH page
  * CSP); DM Sans / Manrope fall back to system fonts.
  */

@@ -38,7 +38,7 @@ function weshopError(status, body) {
 
 async function weshopRequest(pathname, { method = "GET", jsonBody, form } = {}) {
   const apiKey = configuredApiKey || process.env.WESHOP_API_KEY || "";
-  if (!apiKey) throw new Error("WeShop API Key is not configured. Open Settings → Plugins → weshop2.0, or set WESHOP_API_KEY before starting Harness.");
+  if (!apiKey) throw new Error("WeShop API Key is not configured. Open Settings → Plugins → WeShop, or set WESHOP_API_KEY before starting Harness.");
   const headers = { Authorization: apiKey }; // raw key, no Bearer prefix
   let body;
   if (form) body = form;
@@ -128,12 +128,12 @@ function readRequests() {
 const toolSchemas = [
   {
     name: "weshop_canvas_get_state",
-    description: "Read the complete weshop 2.0 canvas, including every material and result, provenance, position, size, viewport, counts, canvases, and the full multi-selection in selectedItemIds/selectedItems.",
+    description: "Read the complete WeShop for DeepSeek Harness canvas, including every material and result, provenance, position, size, viewport, counts, canvases, and the full multi-selection in selectedItemIds/selectedItems.",
     inputSchema: { type: "object", properties: {}, additionalProperties: false },
   },
   {
     name: "weshop_canvas_get_selection",
-    description: "Read every item currently selected on the weshop 2.0 canvas. Use selectedItemIds/selectedItems for multi-selection; selectedItemId/selectedItem remain as the primary selection for compatibility.",
+    description: "Read every item currently selected on the WeShop for DeepSeek Harness canvas. Use selectedItemIds/selectedItems for multi-selection; selectedItemId/selectedItem remain as the primary selection for compatibility.",
     inputSchema: { type: "object", properties: {}, additionalProperties: false },
   },
   {

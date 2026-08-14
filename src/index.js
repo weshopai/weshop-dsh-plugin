@@ -24,7 +24,7 @@ import { fileURLToPath } from "node:url";
 import z from "@deepseek-ai/schemastery";
 import { registerNativeTools, setConfiguredApiKey } from "./native-tools.js";
 
-export const name = "weshop2.0";
+export const name = "weshop";
 export const inject = ["webServer", "tools", "skills"];
 export const Config = z.object({
   apiKey: z.string().role("secret"),
@@ -46,7 +46,7 @@ fs.mkdirSync(assetDirectory, { recursive: true });
 const bundledSkills = [
   {
     name: "open-weshop-2-0",
-    description: "Open, launch, show, or display the embedded WeShop 2.0 canvas workspace.",
+    description: "Open, launch, show, or display the embedded WeShop for DeepSeek Harness canvas workspace.",
   },
   {
     name: "inspect-weshop-canvas",
@@ -68,7 +68,7 @@ function registerBundledSkills(ctx) {
     ctx.skills.register({
       ...skill,
       invocation: { modelInvocable: true, userInvocable: true },
-      provider: "weshop2.0",
+      provider: "weshop",
       source: "bundled",
       resourceBase: { kind: "directory", path: path.join(skillDirectory, skill.name) },
       content: skillBody(skill.name),

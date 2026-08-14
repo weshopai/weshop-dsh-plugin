@@ -1,8 +1,8 @@
-# WeShop 2.0 for DeepSeek Harness
+# WeShop for DeepSeek Harness
 
 English | [简体中文](README.zh-CN.md)
 
-WeShop 2.0 is an AI visual workspace for e-commerce creation inside [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness). Select products, models, or reference images on an infinite canvas, describe the desired result in natural language, and use WeShop OpenAPI to create product photography, virtual try-on, background replacement, image edits, and video assets without leaving the conversation.
+WeShop for DeepSeek Harness is an AI visual workspace for e-commerce creation inside [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness). Select products, models, or reference images on an infinite canvas, describe the desired result in natural language, and use WeShop OpenAPI to create product photography, virtual try-on, background replacement, image edits, and video assets without leaving the conversation.
 
 > [!IMPORTANT]
 > **Install and successfully run DeepSeek Harness before installing this plugin.** This repository is a Harness plugin, not a standalone application.
@@ -30,7 +30,7 @@ Harness should open at `http://127.0.0.1:3080`. Stop it before changing the Web 
 
 Alternatively, follow the official [DeepSeek Harness source installation instructions](https://github.com/deepseek-ai/deepseek-harness#run).
 
-## Install the WeShop plugin
+## Install WeShop for DeepSeek Harness
 
 ### 1. Build a portable package
 
@@ -45,12 +45,12 @@ pnpm build
 pnpm pack
 ```
 
-This creates a versioned file such as `weshop-dsh-weshop-2-0-0.1.22.tgz`.
+This creates a versioned file such as `weshop-dsh-weshop-2-0-0.1.23.tgz`.
 
 ### 2. Install it into the Harness Web profile
 
 ```bash
-PLUGIN_TARBALL="/absolute/path/to/weshop-dsh-weshop-2-0-0.1.22.tgz"
+PLUGIN_TARBALL="/absolute/path/to/weshop-dsh-weshop-2-0-0.1.23.tgz"
 cd ~/.dsh/profiles/web
 pnpm add "$PLUGIN_TARBALL"
 ```
@@ -79,7 +79,7 @@ If an older `@weshop/dsh-canvas` plugin is installed, remove it from dependencie
 npx @deepseek-ai/dsh web
 ```
 
-Create or open a task using the **WeShop Canvas** preset. The plugin installs its bundled preset on first activation.
+Create or open a task using the **WeShop Canvas** preset. WeShop for DeepSeek Harness installs its bundled preset on first activation.
 
 ## Configure WeShop OpenAPI
 

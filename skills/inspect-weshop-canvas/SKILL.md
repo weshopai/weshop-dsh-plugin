@@ -1,6 +1,6 @@
 ---
 name: inspect-weshop-canvas
-description: Read, generate for, edit, and operate the current weshop 2.0 canvas. Use whenever the user asks about canvas materials/results or asks the agent to generate, upscale, transform, reverse-prompt, or locally edit an image for the canvas. All generated outputs must be published automatically with weshop_canvas_publish_result; never use the webpage Add button.
+description: Read, generate for, edit, and operate the current WeShop for DeepSeek Harness canvas. Use whenever the user asks about canvas materials/results or asks the agent to generate, upscale, transform, reverse-prompt, or locally edit an image for the canvas. All generated outputs must be published automatically with weshop_canvas_publish_result; never use the webpage Add button.
 whenToUse: The user asks about canvas contents, the selected image, materials/results, or wants generation/edit/upscale/reverse-prompt/local-edit on canvas content.
 ---
 
@@ -31,7 +31,7 @@ Do not emit updates for every API poll. Keep progress useful and sparse.
 - Call `weshop_canvas_get_selection` when the user says "this", "these", "selected", or otherwise refers to the active selection. Always inspect `selectedItemIds` and `selectedItems`; they contain the complete multi-selection. The singular fields are compatibility aliases for the primary/last-selected item only.
 - Treat `kind: material` as source/reference input and `kind: result` as generated output.
 - Use each item's `provenance` to explain how it entered the canvas. Do not infer missing provenance.
-- If `connected` is false, ask the user to open weshop 2.0 first.
+- If `connected` is false, ask the user to open WeShop for DeepSeek Harness first.
 - Call `weshop_canvas_get_requests` when the user asks to handle an operation submitted from the canvas right-click menu.
 
 ## Canvas context-menu requests

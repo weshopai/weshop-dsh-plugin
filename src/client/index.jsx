@@ -39,8 +39,8 @@ function WeshopOpenAction({ onOpen, sessions, presetFor }) {
     <button
       type="button"
       onClick={() => onOpen()}
-      title="Open weshop 2.0 canvas"
-      aria-label="Open weshop 2.0 canvas"
+      title="Open WeShop canvas"
+      aria-label="Open WeShop canvas"
       style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: 30, height: 30, border: 0, borderRadius: 8, color: "var(--dsw-fg-2, #4a4c47)", background: "transparent", cursor: "pointer" }}
     >
       <SquaresFour size={15} weight="fill" />
