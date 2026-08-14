@@ -1,4 +1,5 @@
 import { SquaresFour } from "@phosphor-icons/react";
+import { useState } from "react";
 import { injectWeshopStyles } from "./styles.js";
 import { WeshopWorkspace } from "./CanvasWorkspace.jsx";
 import { CanvasChat } from "./CanvasChat.jsx";
@@ -12,12 +13,13 @@ import { CanvasChat } from "./CanvasChat.jsx";
  * non-blank sessions, both of which fight a persistent canvas split.
  */
 function SplitPanel({ onExit, initialActionCursor, session, sessionTitle }) {
+  const [selection, setSelection] = useState([]);
   return (
     <div className="weshop-root weshop-split weshop-studio" style={{ position: "fixed", inset: 0, zIndex: 1500, pointerEvents: "auto", overflow: "hidden" }}>
       <main className="weshop-canvas-pane">
-        <WeshopWorkspace onExit={onExit} embedded initialActionCursor={initialActionCursor} />
+        <WeshopWorkspace onExit={onExit} onSelectionChange={setSelection} embedded initialActionCursor={initialActionCursor} />
       </main>
-      <CanvasChat session={session} sessionTitle={sessionTitle} onExit={onExit} />
+      <CanvasChat session={session} sessionTitle={sessionTitle} selection={selection} onExit={onExit} />
     </div>
   );
 }

@@ -208,6 +208,11 @@ const CSS = `
 .canvas-chat-message small { padding-left: 3px; color: #718078; font-size: 9px; line-height: 1.4; }
 .canvas-chat-message i { color: #72756f; font-size: 10px; font-style: normal; animation: progress-pulse 1.5s ease-in-out infinite; }
 .canvas-chat-compose { position: relative; z-index: 3; min-height: 0; padding: 12px 14px 14px; border-top: 1px solid #e5e6df; background: rgba(251,251,248,.97); box-shadow: 0 -10px 30px rgba(26,29,26,.04); backdrop-filter: blur(18px); }
+.canvas-chat-mentions { display: flex; flex-wrap: wrap; gap: 5px; margin: 0 0 7px; }
+.canvas-chat-mentions > span { max-width: 100%; height: 27px; display: inline-flex; align-items: center; gap: 4px; padding: 0 5px 0 8px; overflow: hidden; border: 1px solid #cbd8d0; border-radius: 8px; color: #365c4b; background: #edf4ef; font-size: 9px; font-weight: 600; text-overflow: ellipsis; white-space: nowrap; }
+.canvas-chat-mentions b { color: #58816e; font-size: 10px; }
+.canvas-chat-mentions button { width: 18px; height: 18px; flex: none; display: grid; place-items: center; padding: 0; border: 0; border-radius: 5px; color: #687a70; background: transparent; cursor: pointer; }
+.canvas-chat-mentions button:hover { color: #313b35; background: #dce9e1; }
 .canvas-chat-input { display: grid; grid-template-columns: minmax(0, 1fr) 34px; align-items: end; gap: 8px; padding: 9px 9px 9px 12px; border: 1px solid #d9dad3; border-radius: 14px; background: white; box-shadow: 0 7px 24px rgba(28,31,27,.06); }
 .canvas-chat-input:focus-within { border-color: #819389; box-shadow: 0 0 0 3px rgba(71,120,95,.08); }
 .canvas-chat-input textarea { width: 100%; max-height: 132px; resize: none; padding: 2px 0; border: 0; outline: 0; color: #292b27; background: transparent; font: 12px/1.5 "DM Sans", system-ui, sans-serif; }

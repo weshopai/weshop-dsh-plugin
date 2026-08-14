@@ -12,7 +12,7 @@ function restoreCanvases() {
   return [blankCanvas()];
 }
 
-export function WeshopWorkspace({ onExit, embedded = false, initialActionCursor = Date.now() }) {
+export function WeshopWorkspace({ onExit, onSelectionChange, embedded = false, initialActionCursor = Date.now() }) {
   const [canvases, setCanvases] = useState(restoreCanvases);
   const [activeCanvasId, setActiveCanvasId] = useState(canvases[0].id);
   const activeInitial = canvases.find((canvas) => canvas.id === activeCanvasId) || canvases[0];
@@ -220,6 +220,14 @@ export function WeshopWorkspace({ onExit, embedded = false, initialActionCursor 
 
   const selectedItem = useMemo(() => items.find((item) => item.id === selected), [items, selected]);
   const selectedItems = useMemo(() => selectedIds.map((id) => items.find((item) => item.id === id)).filter(Boolean), [items, selectedIds]);
+  useEffect(() => {
+    onSelectionChange?.(selectedItems.map((item) => ({
+      id: item.id,
+      title: item.title || "Untitled",
+      kind: item.kind || "material",
+      mediaType: item.mediaType || "image",
+    })));
+  }, [onSelectionChange, selectedItems]);
 
   const notify = (message) => {
     setToast(message);
@@ -553,8 +561,8 @@ export function WeshopWorkspace({ onExit, embedded = false, initialActionCursor 
       {!items.length && <button className="empty-state" onClick={() => setAddMenuOpen(true)}><ImageSquare size={26} /><strong>Add your first material</strong><span>支持图片、视频、音频和文字，生成结果会自动出现。</span></button>}
       {dropActive && <div className="drop-overlay"><UploadSimple size={30} /><strong>拖到这里添加素材</strong><span>图片、视频、音频和 TXT</span></div>}
       {!!selectedItems.length && <div className="selection-actions" onPointerDown={(event) => event.stopPropagation()}><span className="selection-count">{selectedItems.length} selected</span>{selectedItems.length === 1 && selectedItem?.src && <button type="button" onClick={() => void downloadSelected()} aria-label="下载所选内容" title="下载"><DownloadSimple size={17} /></button>}<button type="button" onClick={removeSelected} aria-label="删除所选内容" title="删除"><Trash size={17} /></button></div>}
-      <div className="canvas-tool-controls"><button className={canvasMode === "select" ? "is-active" : ""} onClick={() => setCanvasMode("select")} aria-label="选择工具" title="选择 / 框选 (V)"><CursorClick size={17} /></button><button className={canvasMode === "pan" ? "is-active" : ""} onClick={() => setCanvasMode("pan")} aria-label="手型工具" title="拖动画布 (H)，或按住 Space"><Hand size={17} /></button></div>
-      <div className="canvas-controls"><button onClick={() => zoomAt(view.scale / 1.18, innerWidth / 2, innerHeight / 2)} aria-label="Zoom out"><Minus size={16} /></button><span>{Math.round(view.scale * 100)}%</span><button onClick={() => zoomAt(view.scale * 1.18, innerWidth / 2, innerHeight / 2)} aria-label="Zoom in"><Plus size={16} /></button><i /><button onClick={fitAll} aria-label="Fit all"><ArrowsInSimple size={17} /></button><button onClick={() => setView({ x: 0, y: 0, scale: .72 })} aria-label="Reset view"><CornersOut size={17} /></button></div>
+      <div className="canvas-tool-controls" onPointerDown={(event) => event.stopPropagation()}><button className={canvasMode === "select" ? "is-active" : ""} onClick={() => setCanvasMode("select")} aria-label="选择工具" title="选择 / 框选 (V)"><CursorClick size={17} /></button><button className={canvasMode === "pan" ? "is-active" : ""} onClick={() => setCanvasMode("pan")} aria-label="手型工具" title="拖动画布 (H)，或按住 Space"><Hand size={17} /></button></div>
+      <div className="canvas-controls" onPointerDown={(event) => event.stopPropagation()}><button onClick={() => zoomAt(view.scale / 1.18, innerWidth / 2, innerHeight / 2)} aria-label="Zoom out"><Minus size={16} /></button><span>{Math.round(view.scale * 100)}%</span><button onClick={() => zoomAt(view.scale * 1.18, innerWidth / 2, innerHeight / 2)} aria-label="Zoom in"><Plus size={16} /></button><i /><button onClick={fitAll} aria-label="Fit all"><ArrowsInSimple size={17} /></button><button onClick={() => setView({ x: 0, y: 0, scale: .72 })} aria-label="Reset view"><CornersOut size={17} /></button></div>
     </main>
 
     {progress?.stage && progress.stage !== "idle" && <aside className={`agent-progress stage-${progress.stage}`}>

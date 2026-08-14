@@ -186,7 +186,7 @@ function chatRows(snapshot) {
   return rows;
 }
 
-export function CanvasChat({ session, sessionTitle, onExit }) {
+export function CanvasChat({ session, sessionTitle, selection = [], onExit }) {
   const snapshot = useSyncExternalStore(
     (listener) => session.subscribe(listener),
     () => session.getSnapshot(),
@@ -200,7 +200,14 @@ export function CanvasChat({ session, sessionTitle, onExit }) {
   const [sending, setSending] = useState(false);
   const [error, setError] = useState("");
   const [apiConfig, setApiConfig] = useState(null);
+  const [dismissedMentionIds, setDismissedMentionIds] = useState([]);
   const scrollRef = useRef(null);
+  const mentions = selection.filter((item) => !dismissedMentionIds.includes(item.id));
+
+  useEffect(() => {
+    const selected = new Set(selection.map((item) => item.id));
+    setDismissedMentionIds((current) => current.filter((id) => selected.has(id)));
+  }, [selection]);
 
   useEffect(() => {
     fetch("/api/weshop/config")
@@ -217,11 +224,16 @@ export function CanvasChat({ session, sessionTitle, onExit }) {
   const send = async () => {
     const text = draft.trim();
     if (!text || sending || snapshot?.removed) return;
+    const mentionLine = mentions.map((item) => `@${item.title}`).join(" ");
+    const selectionContext = mentions.length
+      ? `\n\n<canvas-selection item_ids="${mentions.map((item) => item.id).join(",")}">The @mentions refer to the current WeShop canvas selection. Call weshop_canvas_get_selection and use selectedItems before acting.</canvas-selection>`
+      : "";
+    const promptText = `${mentionLine ? `${mentionLine}\n` : ""}${text}${selectionContext}`;
     setSending(true);
     setError("");
     setDraft("");
     try {
-      const result = await session.prompt([{ type: "text", text }], "queue");
+      const result = await session.prompt([{ type: "text", text: promptText }], "queue");
       if (!result.ok) throw new Error(result.error?.message || "消息发送失败");
     } catch (reason) {
       setDraft(text);
@@ -274,6 +286,7 @@ export function CanvasChat({ session, sessionTitle, onExit }) {
         <CanvasApproval key={pendingInteraction.key} wait={pendingInteraction} />
       ) : <footer className="canvas-chat-compose">
         {error && <div className="canvas-chat-error">{error}</div>}
+        {mentions.length > 0 && <div className="canvas-chat-mentions" aria-label="画布选区引用">{mentions.map((item) => <span key={item.id} title={`${item.kind} · ${item.mediaType}`}><b>@</b>{item.title}<button type="button" onClick={() => setDismissedMentionIds((current) => [...current, item.id])} aria-label={`移除 ${item.title} 引用`}><X size={10} /></button></span>)}</div>}
         <div className="canvas-chat-input">
           <textarea
             value={draft}
@@ -284,7 +297,7 @@ export function CanvasChat({ session, sessionTitle, onExit }) {
                 void send();
               }
             }}
-            placeholder="继续和 WeShop 对话…"
+            placeholder={mentions.length ? "告诉 WeShop 要如何处理选中的内容…" : "继续和 WeShop 对话…"}
             rows={2}
             disabled={snapshot?.removed}
           />
