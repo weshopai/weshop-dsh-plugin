@@ -97,9 +97,9 @@ async function weshopCreateRun(input) {
 /* ── Canvas state / requests / progress ────────────────────────────────────── */
 
 function readState() {
-  if (!fs.existsSync(stateFile)) return { version: 1, connected: false, title: "Untitled space", items: [], selectedItemId: null, selectedItem: null };
+  if (!fs.existsSync(stateFile)) return { version: 1, connected: false, title: "Untitled space", items: [], selectedItemIds: [], selectedItems: [], selectedItemId: null, selectedItem: null };
   try { return { connected: true, ...JSON.parse(fs.readFileSync(stateFile, "utf8")) }; }
-  catch { return { version: 1, connected: false, error: "Canvas state is unavailable", items: [], selectedItemId: null, selectedItem: null }; }
+  catch { return { version: 1, connected: false, error: "Canvas state is unavailable", items: [], selectedItemIds: [], selectedItems: [], selectedItemId: null, selectedItem: null }; }
 }
 
 function writeProgress(progress) {
@@ -124,12 +124,12 @@ function readRequests() {
 const toolSchemas = [
   {
     name: "weshop_canvas_get_state",
-    description: "Read the complete weshop 2.0 canvas, including every material and result, provenance, position, size, viewport, counts, canvases, and current selection.",
+    description: "Read the complete weshop 2.0 canvas, including every material and result, provenance, position, size, viewport, counts, canvases, and the full multi-selection in selectedItemIds/selectedItems.",
     inputSchema: { type: "object", properties: {}, additionalProperties: false },
   },
   {
     name: "weshop_canvas_get_selection",
-    description: "Read the item currently selected on the weshop 2.0 canvas, including whether it is a material or result and how it was created or imported.",
+    description: "Read every item currently selected on the weshop 2.0 canvas. Use selectedItemIds/selectedItems for multi-selection; selectedItemId/selectedItem remain as the primary selection for compatibility.",
     inputSchema: { type: "object", properties: {}, additionalProperties: false },
   },
   {
@@ -253,7 +253,7 @@ const toolSchemas = [
 async function executeTool(name, input) {
     const state = readState();
     if (name === "weshop_canvas_get_state") return state;
-    if (name === "weshop_canvas_get_selection") return { connected: state.connected, selectedItemId: state.selectedItemId || null, selectedItem: state.selectedItem || null };
+    if (name === "weshop_canvas_get_selection") return { connected: state.connected, selectedItemIds: state.selectedItemIds || (state.selectedItemId ? [state.selectedItemId] : []), selectedItems: state.selectedItems || (state.selectedItem ? [state.selectedItem] : []), selectedItemId: state.selectedItemId || null, selectedItem: state.selectedItem || null };
     if (name === "weshop_canvas_report_progress") return { ok: true, progress: writeProgress(input) };
     if (name === "weshop_canvas_get_requests") return { connected: state.connected, requests: readRequests() };
     if (name === "weshop_canvas_complete_request") {

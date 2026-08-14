@@ -28,7 +28,7 @@ Use `weshop_canvas_report_progress` at meaningful transitions so the canvas expo
 Do not emit updates for every API poll. Keep progress useful and sparse.
 
 - Call `weshop_canvas_get_state` before reasoning about the full canvas.
-- Call `weshop_canvas_get_selection` when the user says "this", "selected", or otherwise refers to the active item.
+- Call `weshop_canvas_get_selection` when the user says "this", "these", "selected", or otherwise refers to the active selection. Always inspect `selectedItemIds` and `selectedItems`; they contain the complete multi-selection. The singular fields are compatibility aliases for the primary/last-selected item only.
 - Treat `kind: material` as source/reference input and `kind: result` as generated output.
 - Use each item's `provenance` to explain how it entered the canvas. Do not infer missing provenance.
 - If `connected` is false, ask the user to open weshop 2.0 first.
@@ -46,7 +46,7 @@ Do not emit updates for every API poll. Keep progress useful and sparse.
 When the user asks to generate, edit, transform, or animate canvas content:
 
 1. Read the canvas state and current selection first.
-2. Treat selected `material` items as candidate API inputs. Do not use unrelated results unless the user requests them.
+2. Treat all selected `material` items as candidate API inputs, preserving their order from `selectedItems`. For agents supporting multiple reference images, pass the complete compatible selection. Do not use unrelated results unless the user requests them.
 3. Load the `weshop-openapi` skill and follow its workflow. It owns intent compilation, endpoint selection, uploads, request parameters, polling, and API-key handling.
 4. If the WeShop API key is unavailable, stop before any API request and direct the user to https://open.weshop.ai/authorization/apikey.
 5. Preserve output provenance for canvas insertion: WeShop agent name/version, execution ID, source canvas item IDs, task name or prompt, creation time, and returned asset URL.

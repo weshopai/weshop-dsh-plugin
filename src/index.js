@@ -141,9 +141,9 @@ function json(response, status, value) {
 }
 
 function readState() {
-  if (!fs.existsSync(stateFile)) return { version: 2, title: "Untitled space", items: [], selectedItemId: null };
+  if (!fs.existsSync(stateFile)) return { version: 3, title: "Untitled space", items: [], selectedItemIds: [], selectedItems: [], selectedItemId: null };
   try { return JSON.parse(fs.readFileSync(stateFile, "utf8")); }
-  catch { return { version: 2, title: "Untitled space", items: [], selectedItemId: null }; }
+  catch { return { version: 3, title: "Untitled space", items: [], selectedItemIds: [], selectedItems: [], selectedItemId: null }; }
 }
 
 export function apply(ctx, config = {}) {

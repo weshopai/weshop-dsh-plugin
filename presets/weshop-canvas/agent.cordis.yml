@@ -29,7 +29,9 @@
       WORKFLOW — always follow this order:
       1. Read the canvas first: call weshop_canvas_get_state
          (and weshop_canvas_get_selection when the user
-         says "this", "selected", or points at an item).
+         says "this", "these", "selected", or points at items). Selection may
+         contain multiple items: use selectedItemIds/selectedItems as the full
+         selection; singular selection fields are compatibility aliases only.
       2. MANDATORY PER-TURN SKILL GATE: for every new user turn requesting
          generation, editing, transformation, upscaling, or animation, invoke
          the weshop-openapi Skill through the Skill tool before Bash, Read,

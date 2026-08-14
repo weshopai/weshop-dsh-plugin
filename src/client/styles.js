@@ -48,6 +48,7 @@ const CSS = `
 .world { position: absolute; inset: 0; width: 3000px; height: 2200px; transform-origin: 0 0; will-change: transform; }
 .result-card { position: absolute; overflow: hidden; border-radius: 5px; background: #e8e8e3; box-shadow: 0 1px 2px rgba(22,23,20,.08), 0 12px 38px rgba(22,23,20,.08); cursor: move; user-select: none; transition: box-shadow .18s ease; }
 .result-card.is-selected { box-shadow: 0 0 0 3px #f7f7f4, 0 0 0 5px #222320, 0 18px 48px rgba(22,23,20,.16); }
+.selection-marquee { position: absolute; z-index: 25; border: 1px solid rgba(35, 97, 72, .9); border-radius: 3px; background: rgba(56, 126, 96, .1); box-shadow: 0 0 0 1px rgba(255,255,255,.7) inset; pointer-events: none; }
 .result-card img { width: 100%; display: block; pointer-events: none; }
 .result-card > video { width: 100%; display: block; background: #171816; }
 .audio-card { min-height: 160px; display: grid; place-content: center; justify-items: center; gap: 12px; padding: 22px; color: #e7eadf; background: radial-gradient(circle at 25% 20%, #4d6153 0, #29332d 42%, #1e2420 100%); }
@@ -68,6 +69,7 @@ const CSS = `
 .canvas-controls span { width: 51px; text-align: center; color: #777873; font-size: 11px; }
 .canvas-controls i { width: 1px; height: 18px; margin: 0 3px; background: #deded8; }
 .selection-actions { left: 50%; bottom: 20px; transform: translateX(-50%); gap: 2px; }
+.selection-count { padding: 0 9px; color: #676963; font-size: 10px; font-weight: 650; letter-spacing: .02em; white-space: nowrap; }
 .selection-actions a { text-decoration: none; }
 .selection-actions button:last-child { color: #a84a42; }
 

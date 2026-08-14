@@ -18,7 +18,7 @@ export function WeshopWorkspace({ onExit, embedded = false, initialActionCursor 
   const activeInitial = canvases.find((canvas) => canvas.id === activeCanvasId) || canvases[0];
   const [items, setItems] = useState(activeInitial.items);
   const [view, setView] = useState(activeInitial.view);
-  const [selected, setSelected] = useState(null);
+  const [selectedIds, setSelectedIds] = useState([]);
   const [title, setTitle] = useState(activeInitial.title);
   const [canvasMenuOpen, setCanvasMenuOpen] = useState(false);
   const [contextMenu, setContextMenu] = useState(null);
@@ -39,6 +39,9 @@ export function WeshopWorkspace({ onExit, embedded = false, initialActionCursor 
   const itemsRef = useRef(items);
   const historyRef = useRef([]);
   const [undoDepth, setUndoDepth] = useState(0);
+  const [selectionRect, setSelectionRect] = useState(null);
+  const spacePressed = useRef(false);
+  const selected = selectedIds.at(-1) || null;
 
   const recordUndo = (snapshot = itemsRef.current) => {
     historyRef.current = [...historyRef.current.slice(-79), snapshot];
@@ -58,7 +61,7 @@ export function WeshopWorkspace({ onExit, embedded = false, initialActionCursor 
     historyRef.current = historyRef.current.slice(0, -1);
     itemsRef.current = previous;
     setItems(previous);
-    setSelected(null);
+    setSelectedIds([]);
     setUndoDepth(historyRef.current.length);
     notify("已返回上一步");
   };
@@ -85,13 +88,16 @@ export function WeshopWorkspace({ onExit, embedded = false, initialActionCursor 
               },
       };
     };
-    const activeItem = items.find((item) => item.id === selected);
+    const activeItems = selectedIds.map((id) => items.find((item) => item.id === id)).filter(Boolean);
+    const activeItem = activeItems.at(-1);
     return {
       version: 3,
       canvasId: activeCanvasId,
       title,
       updatedAt: new Date().toISOString(),
       viewport: view,
+      selectedItemIds: activeItems.map((item) => item.id),
+      selectedItems: activeItems.map(describeItem),
       selectedItemId: selected,
       selectedItem: activeItem ? describeItem(activeItem) : null,
       counts: {
@@ -106,7 +112,7 @@ export function WeshopWorkspace({ onExit, embedded = false, initialActionCursor 
       canvases: canvases.map((canvas) => ({ id: canvas.id, title: canvas.id === activeCanvasId ? title : canvas.title, itemCount: canvas.id === activeCanvasId ? items.length : canvas.items.length, active: canvas.id === activeCanvasId })),
       items: items.map(describeItem),
     };
-  }, [activeCanvasId, canvases, items, selected, title, view]);
+  }, [activeCanvasId, canvases, items, selected, selectedIds, title, view]);
 
   useEffect(() => {
     const timer = setTimeout(() => fetch("/api/weshop/state", {
@@ -182,6 +188,7 @@ export function WeshopWorkspace({ onExit, embedded = false, initialActionCursor 
   }, [progress?.stage, progress?.startedAt]);
 
   const selectedItem = useMemo(() => items.find((item) => item.id === selected), [items, selected]);
+  const selectedItems = useMemo(() => selectedIds.map((id) => items.find((item) => item.id === id)).filter(Boolean), [items, selectedIds]);
 
   const notify = (message) => {
     setToast(message);
@@ -197,7 +204,7 @@ export function WeshopWorkspace({ onExit, embedded = false, initialActionCursor 
     historyRef.current = [];
     setUndoDepth(0);
     setView(canvas.view || { x: 0, y: 0, scale: .72 });
-    setSelected(null);
+    setSelectedIds([]);
     setCanvasMenuOpen(false);
   };
 
@@ -238,23 +245,38 @@ export function WeshopWorkspace({ onExit, embedded = false, initialActionCursor 
     else setView((current) => ({ ...current, x: current.x - event.deltaX, y: current.y - event.deltaY }));
   };
 
-  const beginPan = (event) => {
-    if (event.button !== 0 || event.target.closest("[data-result]")) return;
-    setSelected(null);
-    gesture.current = { type: "pan", startX: event.clientX, startY: event.clientY, view };
+  const beginCanvasGesture = (event) => {
+    if (event.target.closest("[data-result]") || ![0, 1].includes(event.button)) return;
+    if (event.button === 1 || spacePressed.current) {
+      gesture.current = { type: "pan", startX: event.clientX, startY: event.clientY, view };
+    } else {
+      const rect = stageRef.current.getBoundingClientRect();
+      const x = event.clientX - rect.left;
+      const y = event.clientY - rect.top;
+      const additive = event.shiftKey || event.metaKey || event.ctrlKey;
+      gesture.current = { type: "marquee", startX: x, startY: y, additive, baseIds: additive ? selectedIds : [] };
+      if (!additive) setSelectedIds([]);
+      setSelectionRect({ x, y, width: 0, height: 0 });
+    }
     event.currentTarget.setPointerCapture(event.pointerId);
   };
 
   const beginDrag = (event, item) => {
     event.stopPropagation();
-    setSelected(item.id);
-    gesture.current = { type: "item", id: item.id, startX: event.clientX, startY: event.clientY, x: item.x, y: item.y, recorded: false };
+    const toggle = event.shiftKey || event.metaKey || event.ctrlKey;
+    const nextIds = toggle
+      ? selectedIds.includes(item.id) ? selectedIds.filter((id) => id !== item.id) : [...selectedIds, item.id]
+      : selectedIds.includes(item.id) ? selectedIds : [item.id];
+    setSelectedIds(nextIds);
+    if (!nextIds.includes(item.id)) return;
+    const origins = new Map(items.filter((candidate) => nextIds.includes(candidate.id)).map((candidate) => [candidate.id, { x: candidate.x, y: candidate.y }]));
+    gesture.current = { type: "item", ids: nextIds, startX: event.clientX, startY: event.clientY, origins, recorded: false };
     stageRef.current.setPointerCapture(event.pointerId);
   };
 
   const beginResize = (event, item) => {
     event.stopPropagation();
-    setSelected(item.id);
+    setSelectedIds([item.id]);
     gesture.current = { type: "resize", id: item.id, startX: event.clientX, width: item.width, recorded: false };
     stageRef.current.setPointerCapture(event.pointerId);
   };
@@ -264,6 +286,27 @@ export function WeshopWorkspace({ onExit, embedded = false, initialActionCursor 
     if (!current) return;
     if (current.type === "pan") {
       setView({ ...current.view, x: current.view.x + event.clientX - current.startX, y: current.view.y + event.clientY - current.startY });
+      return;
+    }
+    if (current.type === "marquee") {
+      const rect = stageRef.current.getBoundingClientRect();
+      const pointerX = event.clientX - rect.left;
+      const pointerY = event.clientY - rect.top;
+      const box = {
+        x: Math.min(current.startX, pointerX),
+        y: Math.min(current.startY, pointerY),
+        width: Math.abs(pointerX - current.startX),
+        height: Math.abs(pointerY - current.startY),
+      };
+      setSelectionRect(box);
+      const hits = items.filter((item) => {
+        const left = view.x + item.x * view.scale;
+        const top = view.y + item.y * view.scale;
+        const width = item.width * view.scale;
+        const height = item.width / item.aspect * view.scale;
+        return left < box.x + box.width && left + width > box.x && top < box.y + box.height && top + height > box.y;
+      }).map((item) => item.id);
+      setSelectedIds([...new Set([...current.baseIds, ...hits])]);
       return;
     }
     const dx = (event.clientX - current.startX) / view.scale;
@@ -277,7 +320,10 @@ export function WeshopWorkspace({ onExit, embedded = false, initialActionCursor 
       return;
     }
     const dy = (event.clientY - current.startY) / view.scale;
-    replaceItems((all) => all.map((item) => item.id === current.id ? { ...item, x: current.x + dx, y: current.y + dy } : item), { record: false });
+    replaceItems((all) => all.map((item) => {
+      const origin = current.origins.get(item.id);
+      return origin ? { ...item, x: origin.x + dx, y: origin.y + dy } : item;
+    }), { record: false });
   };
 
   const arrange = () => {
@@ -368,9 +414,10 @@ export function WeshopWorkspace({ onExit, embedded = false, initialActionCursor 
   };
 
   const removeSelected = () => {
-    if (!selected) return;
-    replaceItems((all) => all.filter((item) => item.id !== selected));
-    setSelected(null);
+    if (!selectedIds.length) return;
+    const removing = new Set(selectedIds);
+    replaceItems((all) => all.filter((item) => !removing.has(item.id)));
+    setSelectedIds([]);
   };
 
   const downloadSelected = async () => {
@@ -398,6 +445,7 @@ export function WeshopWorkspace({ onExit, embedded = false, initialActionCursor 
     const onKey = (event) => {
       const target = event.target instanceof Element ? event.target : null;
       const editing = target?.closest("input, textarea, select, [contenteditable='true'], [role='textbox']") !== null;
+      if (event.code === "Space" && !editing) spacePressed.current = true;
       if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "z" && !event.shiftKey && !editing) {
         event.preventDefault();
         undo();
@@ -406,8 +454,10 @@ export function WeshopWorkspace({ onExit, embedded = false, initialActionCursor 
       if ((event.key === "Backspace" || event.key === "Delete") && !editing && !event.metaKey && !event.ctrlKey && !event.altKey) removeSelected();
       if (event.key === "0" && !editing) fitAll();
     };
+    const onKeyUp = (event) => { if (event.code === "Space") spacePressed.current = false; };
     window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
+    window.addEventListener("keyup", onKeyUp);
+    return () => { window.removeEventListener("keydown", onKey); window.removeEventListener("keyup", onKeyUp); };
   });
 
   return <div className={`pure-canvas-shell${embedded ? " is-embedded" : ""}`}>
@@ -430,18 +480,18 @@ export function WeshopWorkspace({ onExit, embedded = false, initialActionCursor 
       </div>
     </header>
 
-    <main ref={stageRef} className={`canvas ${dropActive ? "is-drop-active" : ""}`} onWheel={onWheel} onPointerDown={(event) => { setContextMenu(null); beginPan(event); }} onPointerMove={onPointerMove} onPointerUp={() => { gesture.current = null; }} onPointerCancel={() => { gesture.current = null; }} onContextMenu={(event) => { if (!selectedItem || event.target.closest("[data-result]")) return; event.preventDefault(); setContextMenu({ item: selectedItem, x: Math.min(event.clientX, window.innerWidth - 224), y: Math.min(event.clientY, window.innerHeight - 278) }); }} onDragEnter={(event) => { event.preventDefault(); setDropActive(true); }} onDragOver={(event) => { event.preventDefault(); event.dataTransfer.dropEffect = "copy"; }} onDragLeave={(event) => { if (!event.currentTarget.contains(event.relatedTarget)) setDropActive(false); }} onDrop={onDrop}>
+    <main ref={stageRef} className={`canvas ${dropActive ? "is-drop-active" : ""}`} onWheel={onWheel} onPointerDown={(event) => { setContextMenu(null); beginCanvasGesture(event); }} onPointerMove={onPointerMove} onPointerUp={() => { gesture.current = null; setSelectionRect(null); }} onPointerCancel={() => { gesture.current = null; setSelectionRect(null); }} onContextMenu={(event) => { if (!selectedItem || event.target.closest("[data-result]")) return; event.preventDefault(); setContextMenu({ item: selectedItem, x: Math.min(event.clientX, window.innerWidth - 224), y: Math.min(event.clientY, window.innerHeight - 278) }); }} onDragEnter={(event) => { event.preventDefault(); setDropActive(true); }} onDragOver={(event) => { event.preventDefault(); event.dataTransfer.dropEffect = "copy"; }} onDragLeave={(event) => { if (!event.currentTarget.contains(event.relatedTarget)) setDropActive(false); }} onDrop={onDrop}>
       <div className="world" style={{ transform: `translate(${view.x}px, ${view.y}px) scale(${view.scale})` }}>
         {items.map((item) => <article
           data-result
           key={item.id}
-          className={`result-card ${selected === item.id ? "is-selected" : ""}`}
+          className={`result-card ${selectedIds.includes(item.id) ? "is-selected" : ""}`}
           style={{ transform: `translate(${item.x}px, ${item.y}px)`, width: item.width }}
           onPointerDown={(event) => beginDrag(event, item)}
           onContextMenu={(event) => {
             event.preventDefault();
             event.stopPropagation();
-            setSelected(item.id);
+            if (!selectedIds.includes(item.id)) setSelectedIds([item.id]);
             setContextMenu({ item, x: Math.min(event.clientX, window.innerWidth - 224), y: Math.min(event.clientY, window.innerHeight - 278) });
           }}
           onDoubleClick={() => {
@@ -455,13 +505,15 @@ export function WeshopWorkspace({ onExit, embedded = false, initialActionCursor 
           {item.mediaType === "audio" && <div className="audio-card"><MusicNotes size={30} weight="duotone" /><strong>{item.title}</strong><audio src={item.src} controls onPointerDown={(event) => event.stopPropagation()} /></div>}
           {item.mediaType === "text" && <div className="text-card"><TextT size={19} /><p>{item.content}</p></div>}
           <span className={`kind-chip ${item.kind}`}>{item.mediaType || "image"} · {item.kind}</span>
-          {selected === item.id && <button className="resize-handle" aria-label={`Resize ${item.title}`} onPointerDown={(event) => beginResize(event, item)} />}
+          {selectedIds.length === 1 && selected === item.id && <button className="resize-handle" aria-label={`Resize ${item.title}`} onPointerDown={(event) => beginResize(event, item)} />}
         </article>)}
       </div>
 
+      {selectionRect && <div className="selection-marquee" style={{ left: selectionRect.x, top: selectionRect.y, width: selectionRect.width, height: selectionRect.height }} />}
+
       {!items.length && <button className="empty-state" onClick={() => setAddMenuOpen(true)}><ImageSquare size={26} /><strong>Add your first material</strong><span>支持图片、视频、音频和文字，生成结果会自动出现。</span></button>}
       {dropActive && <div className="drop-overlay"><UploadSimple size={30} /><strong>拖到这里添加素材</strong><span>图片、视频、音频和 TXT</span></div>}
-      {selectedItem && <div className="selection-actions" onPointerDown={(event) => event.stopPropagation()}>{selectedItem.src && <button type="button" onClick={() => void downloadSelected()} aria-label="下载所选内容" title="下载"><DownloadSimple size={17} /></button>}<button type="button" onClick={removeSelected} aria-label="删除所选内容" title="删除"><Trash size={17} /></button></div>}
+      {!!selectedItems.length && <div className="selection-actions" onPointerDown={(event) => event.stopPropagation()}><span className="selection-count">{selectedItems.length} selected</span>{selectedItems.length === 1 && selectedItem?.src && <button type="button" onClick={() => void downloadSelected()} aria-label="下载所选内容" title="下载"><DownloadSimple size={17} /></button>}<button type="button" onClick={removeSelected} aria-label="删除所选内容" title="删除"><Trash size={17} /></button></div>}
       <div className="canvas-controls"><button onClick={() => zoomAt(view.scale / 1.18, innerWidth / 2, innerHeight / 2)} aria-label="Zoom out"><Minus size={16} /></button><span>{Math.round(view.scale * 100)}%</span><button onClick={() => zoomAt(view.scale * 1.18, innerWidth / 2, innerHeight / 2)} aria-label="Zoom in"><Plus size={16} /></button><i /><button onClick={fitAll} aria-label="Fit all"><ArrowsInSimple size={17} /></button><button onClick={() => setView({ x: 0, y: 0, scale: .72 })} aria-label="Reset view"><CornersOut size={17} /></button></div>
     </main>
 
