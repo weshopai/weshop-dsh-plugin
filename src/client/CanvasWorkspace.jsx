@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   ArrowCounterClockwise, ArrowsInSimple, CornersOut, DownloadSimple, ImageSquare, MagicWand,
-  CaretDown, CheckCircle, CursorClick, Hand, Key, MagnifyingGlassPlus, Minus, MusicNotes, PencilSimple, Plus,
+  CaretDown, CheckCircle, CursorClick, DotsSix, Hand, Key, MagnifyingGlassPlus, Minus, MusicNotes, PencilSimple, Plus,
   Sparkle, SquaresFour, TextT, Trash, UploadSimple, VideoCamera, X,
 } from "@phosphor-icons/react";
 import { initialLocale, saveLocale, translator } from "./i18n.js";
@@ -538,7 +538,7 @@ export function WeshopWorkspace({ onExit, onSelectionChange, locale: controlledL
         {items.map((item) => <article
           data-result
           key={item.id}
-          className={`result-card ${selectedIds.includes(item.id) ? "is-selected" : ""}`}
+          className={`result-card media-${item.mediaType || "image"} ${selectedIds.includes(item.id) ? "is-selected" : ""}`}
           style={{ transform: `translate(${item.x}px, ${item.y}px)`, width: item.width }}
           onPointerDown={(event) => beginDrag(event, item)}
           onContextMenu={(event) => {
@@ -554,7 +554,7 @@ export function WeshopWorkspace({ onExit, onSelectionChange, locale: controlledL
           }}
         >
           {(item.mediaType || "image") === "image" && <img src={item.src} alt={item.title} draggable="false" />}
-          {item.mediaType === "video" && <video src={item.src} controls preload="metadata" onPointerDown={(event) => event.stopPropagation()} />}
+          {item.mediaType === "video" && <><video src={item.src} controls preload="metadata" onPointerDown={(event) => event.stopPropagation()} /><button type="button" className="video-drag-handle" onPointerDown={(event) => beginDrag(event, item)} onDoubleClick={(event) => event.stopPropagation()} aria-label={`Move ${item.title}`} title={item.title}><DotsSix size={15} weight="bold" /><span>{item.title}</span></button></>}
           {item.mediaType === "audio" && <div className="audio-card"><MusicNotes size={30} weight="duotone" /><strong>{item.title}</strong><audio src={item.src} controls onPointerDown={(event) => event.stopPropagation()} /></div>}
           {item.mediaType === "text" && <div className="text-card"><TextT size={19} /><p>{item.content}</p></div>}
           <span className={`kind-chip ${item.kind}`}>{item.mediaType || "image"} · {item.kind}</span>

@@ -53,10 +53,14 @@ const CSS = `
 .canvas.is-drop-active { cursor: copy; }
 .world { position: absolute; inset: 0; width: 3000px; height: 2200px; transform-origin: 0 0; will-change: transform; }
 .result-card { position: absolute; overflow: hidden; border-radius: 5px; background: #e8e8e3; box-shadow: 0 1px 2px rgba(22,23,20,.08), 0 12px 38px rgba(22,23,20,.08); cursor: move; user-select: none; transition: box-shadow .18s ease; }
-.result-card.is-selected { box-shadow: 0 0 0 3px #f7f7f4, 0 0 0 5px #222320, 0 18px 48px rgba(22,23,20,.16); }
+.result-card.is-selected { z-index: 10; box-shadow: 0 0 0 3px #f7f7f4, 0 0 0 5px #222320, 0 18px 48px rgba(22,23,20,.16); }
 .selection-marquee { position: absolute; z-index: 25; border: 1px solid rgba(35, 97, 72, .9); border-radius: 3px; background: rgba(56, 126, 96, .1); box-shadow: 0 0 0 1px rgba(255,255,255,.7) inset; pointer-events: none; }
 .result-card img { width: 100%; display: block; pointer-events: none; }
 .result-card > video { width: 100%; display: block; background: #171816; }
+.video-drag-handle { position: absolute; z-index: 8; top: 7px; left: 50%; width: min(72%, 260px); height: 28px; display: flex; align-items: center; justify-content: center; gap: 5px; padding: 0 10px; transform: translateX(-50%); overflow: hidden; border: 1px solid rgba(255,255,255,.24); border-radius: 9px; color: #f5f5f1; background: rgba(24,26,23,.78); box-shadow: 0 5px 18px rgba(0,0,0,.18); backdrop-filter: blur(12px); cursor: move; opacity: .82; transition: opacity .15s ease, background .15s ease; }
+.video-drag-handle:hover, .result-card.is-selected .video-drag-handle { opacity: 1; background: rgba(24,26,23,.92); }
+.video-drag-handle span { min-width: 0; overflow: hidden; font-size: 9px; font-weight: 650; text-overflow: ellipsis; white-space: nowrap; }
+.media-video .kind-chip { top: 42px; }
 .audio-card { min-height: 160px; display: grid; place-content: center; justify-items: center; gap: 12px; padding: 22px; color: #e7eadf; background: radial-gradient(circle at 25% 20%, #4d6153 0, #29332d 42%, #1e2420 100%); }
 .audio-card strong { max-width: 260px; overflow: hidden; font: 600 12px "Manrope", system-ui, sans-serif; text-overflow: ellipsis; white-space: nowrap; }
 .audio-card audio { width: min(300px, 100%); height: 34px; }
