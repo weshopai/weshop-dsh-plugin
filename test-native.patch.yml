@@ -1,0 +1,8 @@
+- id: weshop-canvas-mcp
+  disabled: true
+
+- id: weshop-canvas-host
+  disabled: true
+
+- id: weshop-canvas
+  disabled: true

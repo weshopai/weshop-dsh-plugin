@@ -1,0 +1,188 @@
+/**
+ * Ported weshop 2.0 (v0.6.0) styles, scoped under .weshop-root so they never
+ * leak into the DSH shell. The Google Fonts @import is dropped (DSH page
+ * CSP); DM Sans / Manrope fall back to system fonts.
+ */
+const CSS = `
+.weshop-root { font-family: "DM Sans", system-ui, -apple-system, sans-serif; color: #222322; background: #f7f7f4; font-synthesis: none; }
+.weshop-root *, .weshop-root *::before, .weshop-root *::after { box-sizing: border-box; }
+.weshop-root button, .weshop-root input { font: inherit; }
+.weshop-root button { color: inherit; }
+
+.pure-canvas-shell { position: relative; width: 100%; height: 100%; background: #f7f7f4; }
+.topbar { position: absolute; z-index: 70; inset: 0 0 auto; height: 68px; display: flex; flex-direction: row; align-items: center; gap: 11px; padding: 0 18px; background: rgba(250,250,247,.9); border-bottom: 1px solid rgba(31,32,30,.08); backdrop-filter: blur(18px); }
+.brand-mark { width: 30px; height: 30px; display: grid; place-items: center; flex: none; border-radius: 50%; color: white; background: #20211f; }
+.canvas-switcher { position: relative; display: flex; align-items: center; }
+.space-title { width: 190px; padding: 4px 2px 4px 6px; border: 0; outline: 0; background: transparent; font: 600 15px/1 "Manrope", system-ui, sans-serif; }
+.switcher-trigger { width: 25px; height: 25px; display: grid; place-items: center; padding: 0; border: 0; border-radius: 7px; color: #777872; background: transparent; cursor: pointer; }
+.switcher-trigger:hover, .switcher-trigger[aria-expanded="true"] { color: #292a27; background: #eaeae5; }
+.canvas-menu { position: absolute; z-index: 90; left: 0; top: 36px; width: 248px; padding: 7px; border: 1px solid rgba(28,29,27,.12); border-radius: 14px; background: rgba(255,255,252,.98); box-shadow: 0 18px 54px rgba(22,23,20,.17); backdrop-filter: blur(20px); animation: menu-in .13s ease-out; }
+.canvas-menu-label { padding: 7px 9px 6px; color: #96978f; font-size: 8px; font-weight: 700; letter-spacing: .13em; }
+.canvas-menu > button { width: 100%; height: 36px; display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 0 9px; border: 0; border-radius: 8px; text-align: left; background: transparent; cursor: pointer; }
+.canvas-menu > button:hover { background: #f0f1ec; }
+.canvas-menu > button.is-active { background: #e8eee9; }
+.canvas-menu > button span { overflow: hidden; font-size: 11px; font-weight: 600; text-overflow: ellipsis; white-space: nowrap; }
+.canvas-menu > button small { min-width: 20px; padding: 3px 5px; border-radius: 99px; color: #85867e; background: #ededE7; text-align: center; font-size: 8px; }
+.canvas-menu-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; margin-top: 6px; padding-top: 7px; border-top: 1px solid #e8e8e2; }
+.canvas-menu-actions button { height: 32px; display: inline-flex; align-items: center; justify-content: center; gap: 5px; border: 0; border-radius: 8px; background: #eeeee8; font-size: 9px; cursor: pointer; }
+.canvas-menu-actions button:hover { background: #e4e5de; }
+.canvas-menu-actions .delete-canvas { color: #9a443e; background: #f6ece9; }
+.saved-state { flex: none; color: #9a9b96; font-size: 10px; white-space: nowrap; }
+.topbar-actions { margin-left: auto; display: flex; flex-direction: row; align-items: center; gap: 8px; }
+.add-menu-wrap { position: relative; }
+.add-menu { position: absolute; z-index: 90; right: 0; top: 43px; width: 210px; padding: 7px; border: 1px solid rgba(28,29,27,.12); border-radius: 13px; background: rgba(255,255,252,.98); box-shadow: 0 18px 54px rgba(22,23,20,.17); backdrop-filter: blur(20px); }
+.add-menu button { width: 100%; display: grid; grid-template-columns: 24px 1fr; align-items: center; gap: 5px; padding: 9px; border: 0; border-radius: 8px; text-align: left; background: transparent; cursor: pointer; }
+.add-menu button:hover { background: #f0f1ec; }
+.add-menu button span { display: grid; gap: 2px; }
+.add-menu button strong { font-size: 10px; }
+.add-menu button small { color: #8b8c86; font-size: 8px; }
+.quiet-button, .primary-button { height: 36px; border: 0; border-radius: 10px; display: inline-flex; flex-direction: row; align-items: center; justify-content: center; gap: 7px; cursor: pointer; transition: transform .16s ease, background .16s ease; }
+.quiet-button { padding: 0 13px; background: #ecece7; }
+.primary-button { padding: 0 14px; color: #fff; background: #232421; }
+.quiet-button:hover, .primary-button:hover { transform: translateY(-1px); }
+
+.canvas { position: absolute; inset: 68px 0 0; overflow: hidden; touch-action: none; cursor: grab; background: #f8f8f5; }
+.canvas:active { cursor: grabbing; }
+.canvas.is-drop-active { cursor: copy; }
+.world { position: absolute; inset: 0; width: 3000px; height: 2200px; transform-origin: 0 0; will-change: transform; }
+.result-card { position: absolute; overflow: hidden; border-radius: 5px; background: #e8e8e3; box-shadow: 0 1px 2px rgba(22,23,20,.08), 0 12px 38px rgba(22,23,20,.08); cursor: move; user-select: none; transition: box-shadow .18s ease; }
+.result-card.is-selected { box-shadow: 0 0 0 3px #f7f7f4, 0 0 0 5px #222320, 0 18px 48px rgba(22,23,20,.16); }
+.result-card img { width: 100%; display: block; pointer-events: none; }
+.result-card > video { width: 100%; display: block; background: #171816; }
+.audio-card { min-height: 160px; display: grid; place-content: center; justify-items: center; gap: 12px; padding: 22px; color: #e7eadf; background: radial-gradient(circle at 25% 20%, #4d6153 0, #29332d 42%, #1e2420 100%); }
+.audio-card strong { max-width: 260px; overflow: hidden; font: 600 12px "Manrope", system-ui, sans-serif; text-overflow: ellipsis; white-space: nowrap; }
+.audio-card audio { width: min(300px, 100%); height: 34px; }
+.text-card { min-height: 265px; display: flex; flex-direction: column; gap: 18px; padding: 28px; color: #30312d; background: linear-gradient(145deg, #fffef8, #f1f0e7); }
+.text-card > svg { color: #64776b; }
+.text-card p { margin: 0; overflow: hidden; font: 500 18px/1.55 "Manrope", system-ui, sans-serif; white-space: pre-wrap; }
+.kind-chip { position: absolute; top: 9px; left: 9px; padding: 5px 8px; border-radius: 99px; color: white; background: rgba(28,29,27,.72); backdrop-filter: blur(10px); font-size: 9px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; opacity: 0; transition: opacity .16s ease; }
+.result-card:hover .kind-chip, .result-card.is-selected .kind-chip { opacity: 1; }
+.kind-chip.result { background: rgba(39,92,70,.82); }
+.resize-handle { position: absolute; right: 5px; bottom: 5px; width: 18px; height: 18px; padding: 0; border: 3px solid #f7f7f4; border-radius: 50%; background: #222320; cursor: nwse-resize; }
+
+.canvas-controls, .selection-actions { position: fixed; z-index: 30; display: flex; flex-direction: row; align-items: center; padding: 5px; border: 1px solid rgba(32,33,31,.1); border-radius: 12px; background: rgba(255,255,252,.94); box-shadow: 0 8px 30px rgba(28,29,26,.1); backdrop-filter: blur(16px); }
+.canvas-controls { right: 18px; bottom: 18px; }
+.canvas-controls button, .selection-actions button, .selection-actions a { width: 31px; height: 31px; display: grid; place-items: center; border: 0; border-radius: 8px; color: #444540; background: transparent; cursor: pointer; }
+.canvas-controls button:hover, .selection-actions button:hover, .selection-actions a:hover { background: #efefe9; }
+.canvas-controls span { width: 51px; text-align: center; color: #777873; font-size: 11px; }
+.canvas-controls i { width: 1px; height: 18px; margin: 0 3px; background: #deded8; }
+.selection-actions { left: 50%; bottom: 20px; transform: translateX(-50%); gap: 2px; }
+.selection-actions a { text-decoration: none; }
+.selection-actions button:last-child { color: #a84a42; }
+
+.empty-state { position: absolute; left: 50%; top: 50%; transform: translate(-50%,-50%); width: 300px; display: grid; justify-items: center; gap: 8px; padding: 32px; border: 1px dashed #c8c8c0; border-radius: 16px; color: #73746f; background: rgba(255,255,252,.72); cursor: pointer; }
+.empty-state strong { color: #282925; font-family: "Manrope", system-ui, sans-serif; }
+.empty-state span { font-size: 12px; text-align: center; line-height: 1.5; }
+
+.drop-overlay { position: absolute; z-index: 45; inset: 18px; display: grid; place-content: center; justify-items: center; gap: 8px; border: 2px dashed #2e6e56; border-radius: 18px; color: #235944; background: rgba(241,248,243,.9); box-shadow: inset 0 0 0 6px rgba(255,255,255,.75); pointer-events: none; backdrop-filter: blur(8px); }
+.drop-overlay strong { font: 700 18px/1.2 "Manrope", system-ui, sans-serif; }
+.drop-overlay span { color: #688073; font-size: 12px; }
+
+.context-menu { position: fixed; z-index: 80; width: 216px; padding: 7px; border: 1px solid rgba(28,29,27,.12); border-radius: 14px; background: rgba(255,255,252,.97); box-shadow: 0 18px 54px rgba(22,23,20,.19), 0 2px 8px rgba(22,23,20,.08); backdrop-filter: blur(22px); animation: menu-in .13s ease-out; }
+.context-heading { display: grid; gap: 3px; padding: 8px 9px 10px; border-bottom: 1px solid #e8e8e2; margin-bottom: 4px; overflow: hidden; }
+.context-heading span, .eyebrow { color: #789087; font-size: 8px; font-weight: 700; letter-spacing: .13em; text-transform: uppercase; }
+.context-heading strong { overflow: hidden; font-size: 11px; font-weight: 600; text-overflow: ellipsis; white-space: nowrap; }
+.context-menu button { width: 100%; min-height: 47px; display: grid; grid-template-columns: 22px 1fr; align-items: center; gap: 6px; padding: 7px 8px; border: 0; border-radius: 9px; text-align: left; background: transparent; cursor: pointer; }
+.context-menu button:hover { background: #f0f2ed; }
+.context-menu button > svg { color: #3f6254; }
+.context-menu button span { display: grid; gap: 2px; }
+.context-menu button strong { font-size: 11px; font-weight: 600; }
+.context-menu button small { color: #898a84; font-size: 9px; line-height: 1.3; }
+
+.lightbox, .dialog-backdrop { position: fixed; z-index: 90; inset: 0; display: grid; place-items: center; padding: 34px; background: rgba(18,19,17,.78); backdrop-filter: blur(16px); animation: veil-in .18s ease-out; }
+.lightbox img { max-width: min(88vw, 1500px); max-height: 82vh; border-radius: 7px; box-shadow: 0 30px 90px rgba(0,0,0,.42); }
+.lightbox-video { max-width: 88vw; max-height: 82vh; border-radius: 8px; box-shadow: 0 30px 90px rgba(0,0,0,.42); }
+.lightbox-audio { width: min(520px, 86vw); display: grid; justify-items: center; gap: 20px; padding: 54px; border-radius: 18px; color: white; background: #26302a; box-shadow: 0 30px 90px rgba(0,0,0,.42); }
+.lightbox-audio audio { width: 100%; }
+.lightbox-text { width: min(720px, 88vw); max-height: 78vh; overflow: auto; padding: 50px; border-radius: 12px; color: #292a27; background: #fffef8; box-shadow: 0 30px 90px rgba(0,0,0,.42); font: 500 20px/1.7 "Manrope", system-ui, sans-serif; white-space: pre-wrap; }
+.modal-close { position: fixed; right: 24px; top: 24px; width: 38px; height: 38px; display: grid; place-items: center; border: 1px solid rgba(255,255,255,.25); border-radius: 50%; color: white; background: rgba(255,255,255,.1); cursor: pointer; }
+.lightbox-caption { position: fixed; left: 28px; bottom: 24px; display: flex; align-items: center; gap: 10px; color: white; }
+.lightbox-caption strong { font: 600 13px "Manrope", system-ui, sans-serif; }
+.lightbox-caption span { padding: 4px 7px; border-radius: 99px; background: rgba(255,255,255,.14); font-size: 8px; text-transform: uppercase; }
+
+.edit-dialog { width: min(760px, 92vw); min-height: 390px; display: grid; grid-template-columns: .86fr 1.14fr; overflow: hidden; border-radius: 18px; background: #fbfbf7; box-shadow: 0 35px 100px rgba(0,0,0,.38); }
+.edit-preview { min-height: 390px; background: #242522; }
+.edit-preview img { width: 100%; height: 100%; display: block; object-fit: cover; }
+.edit-copy { display: flex; flex-direction: column; padding: 38px; }
+.edit-copy h2 { margin: 9px 0 8px; font: 700 25px/1.15 "Manrope", system-ui, sans-serif; }
+.edit-copy p { margin: 0 0 22px; color: #767771; font-size: 12px; line-height: 1.6; }
+.edit-copy textarea { width: 100%; resize: none; padding: 14px; border: 1px solid #dadad3; border-radius: 11px; outline: none; color: #292a27; background: white; font: 12px/1.55 "DM Sans", sans-serif; }
+.edit-copy textarea:focus { border-color: #536f62; box-shadow: 0 0 0 3px rgba(83,111,98,.1); }
+.dialog-actions { margin-top: auto; padding-top: 22px; display: flex; justify-content: flex-end; gap: 8px; }
+.dialog-actions button { height: 36px; padding: 0 14px; border: 0; border-radius: 9px; background: #ecece6; cursor: pointer; }
+.dialog-actions .submit-edit { display: inline-flex; align-items: center; gap: 6px; color: white; background: #244d3e; }
+.dialog-actions .submit-edit:disabled { opacity: .38; cursor: default; }
+
+.toast { position: fixed; z-index: 100; left: 50%; bottom: 22px; transform: translateX(-50%); min-width: 310px; display: grid; grid-template-columns: 12px 1fr; align-items: center; column-gap: 7px; padding: 12px 15px; border: 1px solid rgba(255,255,255,.12); border-radius: 12px; color: white; background: rgba(31,35,32,.94); box-shadow: 0 12px 35px rgba(20,22,19,.22); font-size: 11px; backdrop-filter: blur(16px); }
+.toast small { grid-column: 2; margin-top: 2px; color: #aeb7b1; font-size: 9px; }
+.toast-dot { width: 7px; height: 7px; border-radius: 50%; background: #75c99c; box-shadow: 0 0 0 4px rgba(117,201,156,.12); }
+
+.agent-progress { position: fixed; z-index: 55; right: 18px; top: 82px; width: 292px; padding: 13px 14px; border: 1px solid rgba(35,45,39,.12); border-radius: 14px; color: #29302c; background: rgba(252,252,248,.95); box-shadow: 0 14px 42px rgba(27,34,29,.12); backdrop-filter: blur(18px); animation: menu-in .18s ease-out; }
+.progress-head { display: grid; grid-template-columns: 9px 1fr auto; align-items: center; gap: 7px; }
+.progress-head strong { font: 600 11px/1.2 "Manrope", system-ui, sans-serif; }
+.progress-head small { color: #999b95; font-size: 8px; }
+.progress-pulse { width: 7px; height: 7px; border-radius: 50%; background: #4b8a6c; box-shadow: 0 0 0 4px rgba(75,138,108,.12); animation: progress-pulse 1.5s ease-in-out infinite; }
+.stage-complete .progress-pulse { background: #4d9b71; animation: none; }
+.stage-error .progress-pulse { background: #b35c50; animation: none; }
+.agent-progress p { margin: 9px 0 10px; color: #696d68; font-size: 10px; line-height: 1.5; }
+.progress-meta { display: flex; flex-wrap: wrap; gap: 5px; }
+.progress-meta span { padding: 5px 7px; border-radius: 7px; color: #7a7e78; background: #eff1ec; font-size: 8px; }
+.progress-meta b { color: #3e4943; font-weight: 600; }
+.progress-track { height: 4px; margin: 2px 0 10px; overflow: hidden; border-radius: 99px; background: #e6e9e3; }
+.progress-track span { height: 100%; display: block; border-radius: inherit; background: linear-gradient(90deg, #47785f, #78ad8d); transition: width .55s ease; }
+
+.text-dialog { width: min(560px, 92vw); padding: 34px; border-radius: 18px; background: #fbfbf7; box-shadow: 0 35px 100px rgba(0,0,0,.38); }
+.text-dialog h2 { margin: 9px 0 20px; font: 700 23px/1.2 "Manrope", system-ui, sans-serif; }
+.text-dialog textarea { width: 100%; resize: vertical; padding: 16px; border: 1px solid #dadad3; border-radius: 11px; outline: none; background: white; font: 13px/1.6 "DM Sans", sans-serif; }
+.text-dialog textarea:focus { border-color: #536f62; box-shadow: 0 0 0 3px rgba(83,111,98,.1); }
+
+.weshop-exit { position: fixed; z-index: 60; left: 14px; bottom: 14px; height: 34px; padding: 0 12px; display: inline-flex; flex-direction: row; align-items: center; gap: 7px; border: 1px solid rgba(32,33,31,.12); border-radius: 10px; color: #3f403c; background: rgba(255,255,252,.92); box-shadow: 0 8px 30px rgba(28,29,26,.1); backdrop-filter: blur(16px); cursor: pointer; font-size: 10px; }
+.weshop-exit:hover { background: #ffffff; }
+
+@keyframes menu-in { from { opacity: 0; transform: translateY(-4px) scale(.98); } }
+@keyframes veil-in { from { opacity: 0; } }
+@keyframes progress-pulse { 50% { opacity: .45; transform: scale(.82); } }
+
+/* ── embedded (details-column split) mode ────────────────────────────────────
+   The weshop-canvas agent mode shows the canvas beside the conversation in the
+   right details column. Fixed viewport floats are rebound to the column, the
+   exit affordance is hidden (closing the details column is the way back), and
+   the topbar compacts to the narrow width. */
+.weshop-split { min-width: 0; }
+.weshop-split .pure-canvas-shell { position: relative; width: 100%; height: 100%; }
+.weshop-split .topbar { height: 52px; padding: 0 10px; gap: 7px; }
+.weshop-split .canvas { inset: 52px 0 0; }
+.weshop-split .brand-mark { width: 26px; height: 26px; }
+.weshop-split .space-title { width: 108px; font-size: 13px; }
+.weshop-split .saved-state { display: none; }
+.weshop-split .quiet-button, .weshop-split .primary-button { height: 30px; padding: 0 10px; font-size: 10px; }
+.weshop-split .quiet-button svg, .weshop-split .primary-button svg { width: 14px; height: 14px; }
+.weshop-split .weshop-exit { display: none; }
+.weshop-split .canvas-controls, .weshop-split .selection-actions { position: absolute; }
+.weshop-split .canvas-controls { right: 12px; bottom: 12px; }
+.weshop-split .selection-actions { left: 50%; bottom: 14px; }
+.weshop-split .agent-progress { position: absolute; right: 12px; top: 62px; }
+
+@media (max-width: 720px) {
+  .saved-state, .quiet-button { display: none; }
+  .space-title { width: 130px; }
+  .primary-button { width: 38px; padding: 0; font-size: 0; }
+  .result-card { max-width: 78vw; }
+  .edit-dialog { grid-template-columns: 1fr; max-height: 88vh; overflow: auto; }
+  .edit-preview { min-height: 180px; max-height: 240px; }
+  .edit-copy { padding: 26px; }
+}
+
+@media (prefers-reduced-motion: reduce) { .weshop-root * { transition: none !important; } }
+`;
+
+let injected = false;
+export function injectWeshopStyles() {
+  if (injected || typeof document === "undefined") return;
+  injected = true;
+  const tag = document.createElement("style");
+  tag.dataset.plugin = "@weshop/dsh-weshop-2-0";
+  tag.dataset.pluginCss = "@weshop/dsh-weshop-2-0/styles";
+  tag.textContent = CSS;
+  document.head.appendChild(tag);
+}
