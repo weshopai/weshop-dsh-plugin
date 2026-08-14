@@ -1,5 +1,5 @@
 import { SquaresFour } from "@phosphor-icons/react";
-import { useState } from "react";
+import { useState, useSyncExternalStore } from "react";
 import { injectWeshopStyles } from "./styles.js";
 import { WeshopWorkspace } from "./CanvasWorkspace.jsx";
 import { CanvasChat } from "./CanvasChat.jsx";
@@ -28,7 +28,14 @@ function SplitPanel({ onExit, initialActionCursor, session, sessionTitle }) {
 }
 
 /** Sidebar-footer action to reopen the canvas after it was closed. */
-function WeshopOpenAction({ onOpen }) {
+function WeshopOpenAction({ onOpen, sessions }) {
+  const state = useSyncExternalStore(
+    (listener) => sessions.list.subscribe(listener),
+    () => sessions.list.getSnapshot(),
+    () => sessions.list.getSnapshot(),
+  );
+  const current = state.current === undefined ? undefined : state.byId[state.current];
+  if (current?.agentPreset !== WESHOP_PRESET) return null;
   return (
     <button
       type="button"
@@ -63,13 +70,16 @@ export function apply(ctx) {
     if (disposePanel !== null) return;
     const state = ctx.sessions.list.getSnapshot();
     const sessionId = state.current;
+    const current = sessionId === undefined ? undefined : state.byId[sessionId];
     const binding = sessionId === undefined ? undefined : ctx.sessions.binding(sessionId);
-    if (sessionId === undefined || binding === undefined) return;
+    if (sessionId === undefined || binding === undefined || current?.agentPreset !== WESHOP_PRESET) return;
     panelSessionId = sessionId;
     disposePanel = ctx.slots.register(
       { name: "shell.overlay", id: "weshop-canvas-right-panel", order: 10 },
-      () => (
-        <SplitPanel
+      () => {
+        const latest = ctx.sessions.list.getSnapshot();
+        if (latest.current !== sessionId || latest.byId[sessionId]?.agentPreset !== WESHOP_PRESET) return null;
+        return <SplitPanel
           initialActionCursor={initialActionCursor}
           session={binding.session}
           sessionTitle={state.byId[sessionId]?.title}
@@ -80,8 +90,8 @@ export function apply(ctx) {
               panelSessionId = null;
             }
           }}
-        />
-      ),
+        />;
+      },
     );
   };
 
@@ -101,7 +111,7 @@ export function apply(ctx) {
       if (disposeAction === null) {
         disposeAction = ctx.slots.register(
           { name: "sidebar.footer.action", id: "weshop-canvas-open", order: 10 },
-          () => <WeshopOpenAction onOpen={openPanel} />,
+          () => <WeshopOpenAction onOpen={openPanel} sessions={ctx.sessions} />,
         );
       }
       if (reopenForSession) openPanel();
