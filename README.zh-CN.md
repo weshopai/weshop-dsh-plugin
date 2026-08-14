@@ -45,12 +45,12 @@ pnpm build
 pnpm pack
 ```
 
-完成后会生成类似 `weshop-dsh-weshop-2-0-0.1.21.tgz` 的版本化文件。
+完成后会生成类似 `weshop-dsh-weshop-2-0-0.1.22.tgz` 的版本化文件。
 
 ### 2. 安装到 Harness Web profile
 
 ```bash
-PLUGIN_TARBALL="/你的绝对路径/weshop-dsh-weshop-2-0-0.1.21.tgz"
+PLUGIN_TARBALL="/你的绝对路径/weshop-dsh-weshop-2-0-0.1.22.tgz"
 cd ~/.dsh/profiles/web
 pnpm add "$PLUGIN_TARBALL"
 ```
@@ -92,7 +92,7 @@ export WESHOP_API_KEY="你的密钥"
 npx @deepseek-ai/dsh web
 ```
 
-可以从 [WeShop OpenAPI](https://open.weshop.ai/authorization/apikey) 获取密钥。
+可以从 [WeShop OpenAPI](https://www.weshop.ai/apiKey) 获取密钥。
 
 ## 开发与检查
 
