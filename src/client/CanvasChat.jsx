@@ -193,6 +193,7 @@ export function CanvasChat({ session, sessionTitle, onExit }) {
     () => session.getSnapshot(),
   );
   const rows = useMemo(() => chatRows(snapshot), [snapshot]);
+  const transcriptRevision = rows.map((row) => `${row.key}:${row.text?.length || 0}:${row.running ? 1 : 0}`).join("|");
   const pendingInteraction = snapshot?.pending?.find((item) => item.kind === "question")
     || snapshot?.pending?.find((item) => item.kind === "approval");
   const [draft, setDraft] = useState("");
@@ -211,7 +212,7 @@ export function CanvasChat({ session, sessionTitle, onExit }) {
   useEffect(() => {
     const element = scrollRef.current;
     if (element) element.scrollTop = element.scrollHeight;
-  }, [rows.length, snapshot?.running]);
+  }, [transcriptRevision]);
 
   const send = async () => {
     const text = draft.trim();
