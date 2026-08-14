@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   ArrowCounterClockwise, ArrowsInSimple, CornersOut, DownloadSimple, ImageSquare, MagicWand,
-  CaretDown, CheckCircle, Key, MagnifyingGlassPlus, Minus, MusicNotes, PencilSimple, Plus,
+  CaretDown, CheckCircle, CursorClick, Hand, Key, MagnifyingGlassPlus, Minus, MusicNotes, PencilSimple, Plus,
   Sparkle, SquaresFour, TextT, Trash, UploadSimple, VideoCamera, X,
 } from "@phosphor-icons/react";
 
@@ -44,6 +44,7 @@ export function WeshopWorkspace({ onExit, embedded = false, initialActionCursor 
   const [apiDialogOpen, setApiDialogOpen] = useState(false);
   const [apiKeyDraft, setApiKeyDraft] = useState("");
   const [apiSaving, setApiSaving] = useState(false);
+  const [canvasMode, setCanvasMode] = useState("select");
   const spacePressed = useRef(false);
   const selected = selectedIds.at(-1) || null;
 
@@ -277,7 +278,7 @@ export function WeshopWorkspace({ onExit, embedded = false, initialActionCursor 
 
   const beginCanvasGesture = (event) => {
     if (event.target.closest("[data-result]") || ![0, 1].includes(event.button)) return;
-    if (event.button === 1 || spacePressed.current) {
+    if (event.button === 1 || spacePressed.current || canvasMode === "pan") {
       gesture.current = { type: "pan", startX: event.clientX, startY: event.clientY, view };
     } else {
       const rect = stageRef.current.getBoundingClientRect();
@@ -293,6 +294,11 @@ export function WeshopWorkspace({ onExit, embedded = false, initialActionCursor 
 
   const beginDrag = (event, item) => {
     event.stopPropagation();
+    if (event.button === 1 || spacePressed.current || canvasMode === "pan") {
+      gesture.current = { type: "pan", startX: event.clientX, startY: event.clientY, view };
+      stageRef.current.setPointerCapture(event.pointerId);
+      return;
+    }
     const toggle = event.shiftKey || event.metaKey || event.ctrlKey;
     const nextIds = toggle
       ? selectedIds.includes(item.id) ? selectedIds.filter((id) => id !== item.id) : [...selectedIds, item.id]
@@ -475,7 +481,9 @@ export function WeshopWorkspace({ onExit, embedded = false, initialActionCursor 
     const onKey = (event) => {
       const target = event.target instanceof Element ? event.target : null;
       const editing = target?.closest("input, textarea, select, [contenteditable='true'], [role='textbox']") !== null;
-      if (event.code === "Space" && !editing) spacePressed.current = true;
+      if (event.code === "Space" && !editing) { event.preventDefault(); spacePressed.current = true; }
+      if (!editing && !event.metaKey && !event.ctrlKey && !event.altKey && event.key.toLowerCase() === "v") setCanvasMode("select");
+      if (!editing && !event.metaKey && !event.ctrlKey && !event.altKey && event.key.toLowerCase() === "h") setCanvasMode("pan");
       if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "z" && !event.shiftKey && !editing) {
         event.preventDefault();
         undo();
@@ -511,7 +519,7 @@ export function WeshopWorkspace({ onExit, embedded = false, initialActionCursor 
       </div>
     </header>
 
-    <main ref={stageRef} className={`canvas ${dropActive ? "is-drop-active" : ""}`} onWheel={onWheel} onPointerDown={(event) => { setContextMenu(null); beginCanvasGesture(event); }} onPointerMove={onPointerMove} onPointerUp={() => { gesture.current = null; setSelectionRect(null); }} onPointerCancel={() => { gesture.current = null; setSelectionRect(null); }} onContextMenu={(event) => { if (!selectedItem || event.target.closest("[data-result]")) return; event.preventDefault(); setContextMenu({ item: selectedItem, x: Math.min(event.clientX, window.innerWidth - 224), y: Math.min(event.clientY, window.innerHeight - 278) }); }} onDragEnter={(event) => { event.preventDefault(); setDropActive(true); }} onDragOver={(event) => { event.preventDefault(); event.dataTransfer.dropEffect = "copy"; }} onDragLeave={(event) => { if (!event.currentTarget.contains(event.relatedTarget)) setDropActive(false); }} onDrop={onDrop}>
+    <main ref={stageRef} className={`canvas mode-${canvasMode} ${dropActive ? "is-drop-active" : ""}`} onWheel={onWheel} onPointerDown={(event) => { setContextMenu(null); beginCanvasGesture(event); }} onPointerMove={onPointerMove} onPointerUp={() => { gesture.current = null; setSelectionRect(null); }} onPointerCancel={() => { gesture.current = null; setSelectionRect(null); }} onContextMenu={(event) => { if (!selectedItem || event.target.closest("[data-result]")) return; event.preventDefault(); setContextMenu({ item: selectedItem, x: Math.min(event.clientX, window.innerWidth - 224), y: Math.min(event.clientY, window.innerHeight - 278) }); }} onDragEnter={(event) => { event.preventDefault(); setDropActive(true); }} onDragOver={(event) => { event.preventDefault(); event.dataTransfer.dropEffect = "copy"; }} onDragLeave={(event) => { if (!event.currentTarget.contains(event.relatedTarget)) setDropActive(false); }} onDrop={onDrop}>
       <div className="world" style={{ transform: `translate(${view.x}px, ${view.y}px) scale(${view.scale})` }}>
         {items.map((item) => <article
           data-result
@@ -545,6 +553,7 @@ export function WeshopWorkspace({ onExit, embedded = false, initialActionCursor 
       {!items.length && <button className="empty-state" onClick={() => setAddMenuOpen(true)}><ImageSquare size={26} /><strong>Add your first material</strong><span>支持图片、视频、音频和文字，生成结果会自动出现。</span></button>}
       {dropActive && <div className="drop-overlay"><UploadSimple size={30} /><strong>拖到这里添加素材</strong><span>图片、视频、音频和 TXT</span></div>}
       {!!selectedItems.length && <div className="selection-actions" onPointerDown={(event) => event.stopPropagation()}><span className="selection-count">{selectedItems.length} selected</span>{selectedItems.length === 1 && selectedItem?.src && <button type="button" onClick={() => void downloadSelected()} aria-label="下载所选内容" title="下载"><DownloadSimple size={17} /></button>}<button type="button" onClick={removeSelected} aria-label="删除所选内容" title="删除"><Trash size={17} /></button></div>}
+      <div className="canvas-tool-controls"><button className={canvasMode === "select" ? "is-active" : ""} onClick={() => setCanvasMode("select")} aria-label="选择工具" title="选择 / 框选 (V)"><CursorClick size={17} /></button><button className={canvasMode === "pan" ? "is-active" : ""} onClick={() => setCanvasMode("pan")} aria-label="手型工具" title="拖动画布 (H)，或按住 Space"><Hand size={17} /></button></div>
       <div className="canvas-controls"><button onClick={() => zoomAt(view.scale / 1.18, innerWidth / 2, innerHeight / 2)} aria-label="Zoom out"><Minus size={16} /></button><span>{Math.round(view.scale * 100)}%</span><button onClick={() => zoomAt(view.scale * 1.18, innerWidth / 2, innerHeight / 2)} aria-label="Zoom in"><Plus size={16} /></button><i /><button onClick={fitAll} aria-label="Fit all"><ArrowsInSimple size={17} /></button><button onClick={() => setView({ x: 0, y: 0, scale: .72 })} aria-label="Reset view"><CornersOut size={17} /></button></div>
     </main>
 

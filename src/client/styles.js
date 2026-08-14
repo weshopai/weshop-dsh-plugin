@@ -43,8 +43,10 @@ const CSS = `
 .quiet-button:disabled { opacity: .38; transform: none; cursor: default; }
 .api-key-button.is-configured { color: #285e48; background: #e5eee8; }
 
-.canvas { position: absolute; inset: 68px 0 0; overflow: hidden; touch-action: none; cursor: grab; background: #f8f8f5; }
-.canvas:active { cursor: grabbing; }
+.canvas { position: absolute; inset: 68px 0 0; overflow: hidden; touch-action: none; background: #f8f8f5; }
+.canvas.mode-select { cursor: crosshair; }
+.canvas.mode-pan { cursor: grab; }
+.canvas.mode-pan:active { cursor: grabbing; }
 .canvas.is-drop-active { cursor: copy; }
 .world { position: absolute; inset: 0; width: 3000px; height: 2200px; transform-origin: 0 0; will-change: transform; }
 .result-card { position: absolute; overflow: hidden; border-radius: 5px; background: #e8e8e3; box-shadow: 0 1px 2px rgba(22,23,20,.08), 0 12px 38px rgba(22,23,20,.08); cursor: move; user-select: none; transition: box-shadow .18s ease; }
@@ -63,10 +65,12 @@ const CSS = `
 .kind-chip.result { background: rgba(39,92,70,.82); }
 .resize-handle { position: absolute; right: 5px; bottom: 5px; width: 18px; height: 18px; padding: 0; border: 3px solid #f7f7f4; border-radius: 50%; background: #222320; cursor: nwse-resize; }
 
-.canvas-controls, .selection-actions { position: fixed; z-index: 30; display: flex; flex-direction: row; align-items: center; padding: 5px; border: 1px solid rgba(32,33,31,.1); border-radius: 12px; background: rgba(255,255,252,.94); box-shadow: 0 8px 30px rgba(28,29,26,.1); backdrop-filter: blur(16px); }
+.canvas-controls, .canvas-tool-controls, .selection-actions { position: fixed; z-index: 30; display: flex; flex-direction: row; align-items: center; padding: 5px; border: 1px solid rgba(32,33,31,.1); border-radius: 12px; background: rgba(255,255,252,.94); box-shadow: 0 8px 30px rgba(28,29,26,.1); backdrop-filter: blur(16px); }
 .canvas-controls { right: 18px; bottom: 18px; }
-.canvas-controls button, .selection-actions button, .selection-actions a { width: 31px; height: 31px; display: grid; place-items: center; border: 0; border-radius: 8px; color: #444540; background: transparent; cursor: pointer; }
-.canvas-controls button:hover, .selection-actions button:hover, .selection-actions a:hover { background: #efefe9; }
+.canvas-tool-controls { left: 18px; bottom: 18px; gap: 2px; }
+.canvas-controls button, .canvas-tool-controls button, .selection-actions button, .selection-actions a { width: 31px; height: 31px; display: grid; place-items: center; border: 0; border-radius: 8px; color: #444540; background: transparent; cursor: pointer; }
+.canvas-controls button:hover, .canvas-tool-controls button:hover, .selection-actions button:hover, .selection-actions a:hover { background: #efefe9; }
+.canvas-tool-controls button.is-active { color: white; background: #292b27; }
 .canvas-controls span { width: 51px; text-align: center; color: #777873; font-size: 11px; }
 .canvas-controls i { width: 1px; height: 18px; margin: 0 3px; background: #deded8; }
 .selection-actions { left: 50%; bottom: 20px; transform: translateX(-50%); gap: 2px; }
@@ -173,8 +177,9 @@ const CSS = `
 .weshop-split .quiet-button, .weshop-split .primary-button { height: 30px; padding: 0 10px; font-size: 10px; }
 .weshop-split .quiet-button svg, .weshop-split .primary-button svg { width: 14px; height: 14px; }
 .weshop-split .weshop-exit { display: none; }
-.weshop-split .canvas-controls, .weshop-split .selection-actions { position: absolute; }
+.weshop-split .canvas-controls, .weshop-split .canvas-tool-controls, .weshop-split .selection-actions { position: absolute; }
 .weshop-split .canvas-controls { right: 12px; bottom: 12px; }
+.weshop-split .canvas-tool-controls { left: 12px; bottom: 12px; }
 .weshop-split .selection-actions { left: 50%; bottom: 14px; }
 .weshop-split .agent-progress { position: absolute; right: 12px; top: 62px; }
 
