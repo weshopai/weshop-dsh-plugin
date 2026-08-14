@@ -5,7 +5,7 @@
 **内置于 DeepSeek Harness 的 AI 电商视觉工作台。**
 
 [![License](https://img.shields.io/badge/license-MIT-2ea44f.svg)](./LICENSE)
-[![Version](https://img.shields.io/badge/version-0.1.27-282828.svg)]()
+[![Version](https://img.shields.io/badge/version-0.1.28-282828.svg)]()
 [![Platform](https://img.shields.io/badge/platform-DeepSeek%20Harness%20plugin-282828.svg)]()
 [![English](https://img.shields.io/badge/Language-English-7530FE.svg)](./README.md)
 
@@ -69,7 +69,47 @@ Harness 默认打开在 `http://127.0.0.1:3080`。修改 Web profile 前，请�
 
 也可以按照官方的 [DeepSeek Harness 源码安装说明](https://github.com/deepseek-ai/deepseek-harness#run)进行安装。
 
-### 1. 构建可迁移安装包
+### 1. 从 GitHub Packages 安装
+
+需要拥有本 private 仓库访问权限，以及一个具备 `read:packages` 的 GitHub classic personal access token。首次执行以下登录：
+
+```bash
+npm login --scope=@weshopai --auth-type=legacy --registry=https://npm.pkg.github.com
+```
+
+然后安装到 Harness Web profile：
+
+```bash
+cd ~/.dsh/profiles/web
+pnpm add @weshopai/dsh-weshop-2-0@latest
+```
+
+### 2. 启用 Harness bundle
+
+打开 `~/.dsh/profiles/web/package.json`，在 `dsh.profile.bundles` 中追加 `@weshopai/dsh-weshop-2-0`。不要删除 Harness 已有的 bundle：
+
+```json
+{
+  "dsh": {
+    "profile": {
+      "bundles": [
+        "@deepseek-ai/dsh-base",
+        "@deepseek-ai/dsh-web-app",
+        "@weshopai/dsh-weshop-2-0"
+      ]
+    }
+  }
+}
+```
+
+已经安装过的用户可更新：
+
+```bash
+cd ~/.dsh/profiles/web
+pnpm update @weshopai/dsh-weshop-2-0
+```
+
+### 备选：构建可迁移安装包
 
 克隆本 private 仓库需要相应的 GitHub 权限。
 
@@ -82,30 +122,14 @@ pnpm build
 pnpm pack
 ```
 
-完成后会生成类似 `weshop-dsh-weshop-2-0-0.1.27.tgz` 的版本化文件。
+完成后会生成类似 `weshopai-dsh-weshop-2-0-0.1.28.tgz` 的版本化文件。
 
-### 2. 安装到 Harness Web profile
+安装到 Harness Web profile：
 
 ```bash
-PLUGIN_TARBALL="/你的绝对路径/weshop-dsh-weshop-2-0-0.1.27.tgz"
+PLUGIN_TARBALL="/你的绝对路径/weshopai-dsh-weshop-2-0-0.1.28.tgz"
 cd ~/.dsh/profiles/web
 pnpm add "$PLUGIN_TARBALL"
-```
-
-打开 `~/.dsh/profiles/web/package.json`，在 `dsh.profile.bundles` 中追加 `@weshop/dsh-weshop-2-0`。不要删除 Harness 已有的 bundle：
-
-```json
-{
-  "dsh": {
-    "profile": {
-      "bundles": [
-        "@deepseek-ai/dsh-base",
-        "@deepseek-ai/dsh-web-app",
-        "@weshop/dsh-weshop-2-0"
-      ]
-    }
-  }
-}
 ```
 
 > **⚠️ 从 `@weshop/dsh-canvas` 升级**

@@ -6,7 +6,7 @@ whenToUse: The user wants to see or enter the WeShop for DeepSeek Harness canvas
 
 # Open WeShop for DeepSeek Harness
 
-The WeShop for DeepSeek Harness canvas is embedded in the DeepSeek Harness GUI as a full-screen canvas surface, backed by the Host and Client contributions of `@weshop/dsh-weshop-2-0`.
+The WeShop for DeepSeek Harness canvas is embedded in the DeepSeek Harness GUI as a full-screen canvas surface, backed by the Host and Client contributions of `@weshopai/dsh-weshop-2-0`.
 
 1. Confirm the `weshop` Cordis row is enabled in the Web profile and the package is built.
 2. If the canvas is hidden, tell the user to click the WeShop icon in the sidebar footer (or say "open WeShop" again).

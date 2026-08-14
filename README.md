@@ -5,7 +5,7 @@
 **An AI visual workspace for e-commerce creation, built into DeepSeek Harness.**
 
 [![License](https://img.shields.io/badge/license-MIT-2ea44f.svg)](./LICENSE)
-[![Version](https://img.shields.io/badge/version-0.1.27-282828.svg)]()
+[![Version](https://img.shields.io/badge/version-0.1.28-282828.svg)]()
 [![Platform](https://img.shields.io/badge/platform-DeepSeek%20Harness%20plugin-282828.svg)]()
 [![简体中文](https://img.shields.io/badge/Language-%E7%AE%80%E4%BD%93%E4%B8%AD%E6%96%87-7530FE.svg)](./README.zh-CN.md)
 
@@ -68,7 +68,47 @@ Harness should open at `http://127.0.0.1:3080`. Stop it before changing the Web 
 
 Alternatively, follow the official [DeepSeek Harness source installation instructions](https://github.com/deepseek-ai/deepseek-harness#run).
 
-### 1. Build a portable package
+### 1. Install from GitHub Packages
+
+Access to this private repository and a GitHub classic personal access token with `read:packages` are required. Authenticate once:
+
+```bash
+npm login --scope=@weshopai --auth-type=legacy --registry=https://npm.pkg.github.com
+```
+
+Then install the plugin into the Harness Web profile:
+
+```bash
+cd ~/.dsh/profiles/web
+pnpm add @weshopai/dsh-weshop-2-0@latest
+```
+
+### 2. Enable the Harness bundle
+
+Open `~/.dsh/profiles/web/package.json` and append `@weshopai/dsh-weshop-2-0` to `dsh.profile.bundles`. Preserve the bundles already installed by Harness:
+
+```json
+{
+  "dsh": {
+    "profile": {
+      "bundles": [
+        "@deepseek-ai/dsh-base",
+        "@deepseek-ai/dsh-web-app",
+        "@weshopai/dsh-weshop-2-0"
+      ]
+    }
+  }
+}
+```
+
+Update an installed version with:
+
+```bash
+cd ~/.dsh/profiles/web
+pnpm update @weshopai/dsh-weshop-2-0
+```
+
+### Alternative: build a portable archive
 
 Access to this private repository is required.
 
@@ -81,30 +121,14 @@ pnpm build
 pnpm pack
 ```
 
-This creates a versioned file such as `weshop-dsh-weshop-2-0-0.1.27.tgz`.
+This creates a versioned file such as `weshopai-dsh-weshop-2-0-0.1.28.tgz`.
 
-### 2. Install it into the Harness Web profile
+Install it into the Harness Web profile:
 
 ```bash
-PLUGIN_TARBALL="/absolute/path/to/weshop-dsh-weshop-2-0-0.1.27.tgz"
+PLUGIN_TARBALL="/absolute/path/to/weshopai-dsh-weshop-2-0-0.1.28.tgz"
 cd ~/.dsh/profiles/web
 pnpm add "$PLUGIN_TARBALL"
-```
-
-Open `~/.dsh/profiles/web/package.json` and append `@weshop/dsh-weshop-2-0` to `dsh.profile.bundles`. Preserve the bundles already installed by Harness:
-
-```json
-{
-  "dsh": {
-    "profile": {
-      "bundles": [
-        "@deepseek-ai/dsh-base",
-        "@deepseek-ai/dsh-web-app",
-        "@weshop/dsh-weshop-2-0"
-      ]
-    }
-  }
-}
 ```
 
 > **⚠️ Upgrading from `@weshop/dsh-canvas`**

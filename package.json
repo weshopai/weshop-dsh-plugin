@@ -1,9 +1,12 @@
 {
-  "name": "@weshop/dsh-weshop-2-0",
-  "version": "0.1.27",
-  "private": true,
+  "name": "@weshopai/dsh-weshop-2-0",
+  "version": "0.1.28",
+  "private": false,
   "description": "Native Cordis WeShop canvas, tools, skills, and Web UI for DeepSeek Harness",
   "license": "MIT",
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com"
+  },
   "repository": {
     "type": "git",
     "url": "git+ssh://git@github.com/weshopai/weshop-dsh-plugin.git"
