@@ -48,7 +48,7 @@ When the user asks to generate, edit, transform, or animate canvas content:
 1. Read the canvas state and current selection first.
 2. Treat all selected `material` items as candidate API inputs, preserving their order from `selectedItems`. For agents supporting multiple reference images, pass the complete compatible selection. Do not use unrelated results unless the user requests them.
 3. Load the `weshop-openapi` skill and follow its workflow. It owns intent compilation, endpoint selection, uploads, request parameters, polling, and API-key handling.
-4. If the WeShop API key is unavailable, stop before any API request and direct the user to https://www.weshop.ai/apiKey.
+4. If the WeShop API key is unavailable, stop before any API request. Tell the user to open the WeShop canvas and click **Configure API Key** in its top bar, then retry; alternatively they may set `WESHOP_API_KEY` before starting Harness. Direct them to https://www.weshop.ai/apiKey only to obtain a key.
 5. Preserve output provenance for canvas insertion: WeShop agent name/version, execution ID, source canvas item IDs, task name or prompt, creation time, and returned asset URL.
 6. Classify generated outputs as `result`; never overwrite or reclassify their source `material` items.
 7. After a successful generation, publish the matching asset type directly from the returned URL so it appears automatically: images use `weshop_canvas_publish_result`; video/audio/text use `weshop_canvas_publish_asset`. Do not download remote results first; use a local path only for a genuinely local-only output. Never use `Add` for this.

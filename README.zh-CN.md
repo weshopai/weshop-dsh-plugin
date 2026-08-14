@@ -5,7 +5,7 @@
 **内置于 DeepSeek Harness 的 AI 电商视觉工作台。**
 
 [![License](https://img.shields.io/badge/license-PolyForm%20Noncommercial-7530FE.svg)](./LICENSE)
-[![Version](https://img.shields.io/badge/version-0.1.24-282828.svg)]()
+[![Version](https://img.shields.io/badge/version-0.1.25-282828.svg)]()
 [![Platform](https://img.shields.io/badge/platform-DeepSeek%20Harness%20plugin-282828.svg)]()
 [![English](https://img.shields.io/badge/Language-English-7530FE.svg)](./README.md)
 
@@ -82,12 +82,12 @@ pnpm build
 pnpm pack
 ```
 
-完成后会生成类似 `weshop-dsh-weshop-2-0-0.1.24.tgz` 的版本化文件。
+完成后会生成类似 `weshop-dsh-weshop-2-0-0.1.25.tgz` 的版本化文件。
 
 ### 2. 安装到 Harness Web profile
 
 ```bash
-PLUGIN_TARBALL="/你的绝对路径/weshop-dsh-weshop-2-0-0.1.24.tgz"
+PLUGIN_TARBALL="/你的绝对路径/weshop-dsh-weshop-2-0-0.1.25.tgz"
 cd ~/.dsh/profiles/web
 pnpm add "$PLUGIN_TARBALL"
 ```

@@ -27,7 +27,7 @@ const en = {
   "取消问题": "Cancel question",
   "需要授权": "Approval required", "允许执行此操作？": "Allow this action?", "拒绝": "Reject", "允许一次": "Allow once", "工具": "Tool",
   "你": "You", "当前对话": "Current conversation", "关闭画布": "Close canvas", "返回 Harness": "Back to Harness", "正在执行": "Running", "已调用": "Called", "正在思考与创作…": "Thinking and creating…",
-  "需要配置 WeShop API Key": "WeShop API Key required", "打开 DSH 设置 → 插件 → WeShop，填写 API Key 后即可生成。也可以在启动 Harness 前设置 WESHOP_API_KEY。": "Open DSH Settings → Plugins → WeShop and enter an API Key, or set WESHOP_API_KEY before starting Harness.",
+  "需要配置 WeShop API Key": "WeShop API Key required", "请在 WeShop 画布顶部点击“配置 API Key”填写密钥。也可以在启动 Harness 前设置 WESHOP_API_KEY。": "Click Configure API Key in the WeShop canvas top bar, or set WESHOP_API_KEY before starting Harness.",
   "画布与对话已连接": "Canvas and conversation connected", "在这里描述你想生成或修改的内容，消息会同步到当前 Harness 会话。": "Describe what you want to create or change. Messages sync to the current Harness session.",
   "画布选区引用": "Canvas selection references", "告诉 WeShop 要如何处理选中的内容…": "Tell WeShop what to do with the selection…", "继续和 WeShop 对话…": "Continue with WeShop…", "停止生成": "Stop generation", "发送消息": "Send message", "消息发送失败": "Could not send message", "Enter 发送 · Shift + Enter 换行": "Enter to send · Shift + Enter for a new line",
   "当前已配置": "Configured", "配置来源": "Source", "语言": "Language",

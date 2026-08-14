@@ -261,7 +261,7 @@ export function CanvasChat({ session, sessionTitle, selection = [], locale = "en
         {apiConfig?.configured === false && (
           <div className="canvas-api-notice" role="status">
             <strong>{t("需要配置 WeShop API Key")}</strong>
-            <p>{t("打开 DSH 设置 → 插件 → WeShop，填写 API Key 后即可生成。也可以在启动 Harness 前设置 WESHOP_API_KEY。")}</p>
+            <p>{t("请在 WeShop 画布顶部点击“配置 API Key”填写密钥。也可以在启动 Harness 前设置 WESHOP_API_KEY。")}</p>
           </div>
         )}
         {rows.length === 0 && (

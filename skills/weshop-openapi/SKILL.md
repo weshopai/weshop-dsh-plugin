@@ -12,7 +12,7 @@ For **every new user turn** that asks to generate, edit, transform, upscale, or 
 
 Use the recipes in this Skill as the source of truth. Do not search the package source or the web for parameters already documented here.
 
-WeShop generation runs server-side through the native Cordis tools (`weshop_generate_run` / `weshop_get_run`). The `WESHOP_API_KEY` lives in the Harness host process — never echo it, never put it in a tool argument or a canvas provenance record, and never send it anywhere other than `https://openapi.weshop.ai/openapi/*`. If the key is missing, stop before any API request and direct the user to https://www.weshop.ai/apiKey.
+WeShop generation runs server-side through the native Cordis tools (`weshop_generate_run` / `weshop_get_run`). The `WESHOP_API_KEY` lives in the Harness host process — never echo it, never put it in a tool argument or a canvas provenance record, and never send it anywhere other than `https://openapi.weshop.ai/openapi/*`. If the key is missing, stop before any API request and tell the user to open the WeShop canvas and click **Configure API Key** in its top bar, then retry; alternatively they may set `WESHOP_API_KEY` before starting Harness. Direct them to https://www.weshop.ai/apiKey only to obtain a key.
 
 ## Workflow
 
