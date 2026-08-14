@@ -117,6 +117,10 @@ pnpm pack --dry-run
 - API Key 和本地生成资源不会写入安装包，需要在每台电脑上单独配置。
 - 画布数据保存在浏览器本地，不会嵌入插件安装包。
 
+## 联系方式
+
+支持、合作或商业授权请联系 [hi@weshop.ai](mailto:hi@weshop.ai)。
+
 ## 许可证
 
 本软件采用 [PolyForm Noncommercial License 1.0.0](LICENSE) 以 source-available 方式提供。允许个人、研究、教育、慈善及其他非商业用途。商业使用必须另行取得 WeShop AI 的书面许可。

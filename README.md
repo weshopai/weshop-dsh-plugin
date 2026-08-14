@@ -117,6 +117,10 @@ Package entry points and runtime contributions:
 - API Keys and generated local assets are intentionally excluded from the package and must be configured on each machine.
 - Canvas data is stored locally by the browser; it is not embedded in the installation archive.
 
+## Contact
+
+For support, partnerships, or commercial licensing, email [hi@weshop.ai](mailto:hi@weshop.ai).
+
 ## License
 
 This software is source-available under the [PolyForm Noncommercial License 1.0.0](LICENSE). Personal, research, educational, charitable, and other noncommercial uses are permitted. Commercial use requires separate written permission from WeShop AI.
