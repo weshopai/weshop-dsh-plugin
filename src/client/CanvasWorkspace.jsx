@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   ArrowCounterClockwise, ArrowsInSimple, CornersOut, DownloadSimple, ImageSquare, MagicWand,
-  CaretDown, MagnifyingGlassPlus, Minus, MusicNotes, PencilSimple, Plus,
+  CaretDown, CheckCircle, Key, MagnifyingGlassPlus, Minus, MusicNotes, PencilSimple, Plus,
   Sparkle, SquaresFour, TextT, Trash, UploadSimple, VideoCamera, X,
 } from "@phosphor-icons/react";
 
@@ -40,6 +40,10 @@ export function WeshopWorkspace({ onExit, embedded = false, initialActionCursor 
   const historyRef = useRef([]);
   const [undoDepth, setUndoDepth] = useState(0);
   const [selectionRect, setSelectionRect] = useState(null);
+  const [apiConfig, setApiConfig] = useState(null);
+  const [apiDialogOpen, setApiDialogOpen] = useState(false);
+  const [apiKeyDraft, setApiKeyDraft] = useState("");
+  const [apiSaving, setApiSaving] = useState(false);
   const spacePressed = useRef(false);
   const selected = selectedIds.at(-1) || null;
 
@@ -122,6 +126,32 @@ export function WeshopWorkspace({ onExit, embedded = false, initialActionCursor 
     }).catch(() => undefined), 80);
     return () => clearTimeout(timer);
   }, [canvasState]);
+
+  const refreshApiConfig = async () => {
+    try {
+      const response = await fetch("/api/weshop/config");
+      if (response.ok) setApiConfig(await response.json());
+    } catch { /* Configuration status is optional while the host starts. */ }
+  };
+  useEffect(() => { void refreshApiConfig(); }, []);
+
+  const saveApiKey = async (apiKey) => {
+    setApiSaving(true);
+    try {
+      const response = await fetch("/api/weshop/config", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ apiKey }),
+      });
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error || "save failed");
+      setApiConfig(result);
+      setApiKeyDraft("");
+      setApiDialogOpen(false);
+      notify(apiKey ? "WeShop API Key 已保存" : result.configured ? "已恢复其他 API Key 配置" : "API Key 已清除");
+    } catch { notify("API Key 保存失败，请稍后重试"); }
+    finally { setApiSaving(false); }
+  };
 
   useEffect(() => {
     const applyActions = async () => {
@@ -474,6 +504,7 @@ export function WeshopWorkspace({ onExit, embedded = false, initialActionCursor 
       </div>
       <span className="saved-state">Saved locally</span>
       <div className="topbar-actions">
+        <button className={`quiet-button api-key-button${apiConfig?.configured ? " is-configured" : ""}`} onClick={() => setApiDialogOpen(true)} title="配置 WeShop API Key">{apiConfig?.configured ? <CheckCircle size={17} weight="fill" /> : <Key size={17} />} {apiConfig?.configured ? "API 已配置" : "配置 API Key"}</button>
         <button className="quiet-button undo-button" onClick={undo} disabled={undoDepth === 0} title="返回上一步 (⌘/Ctrl+Z)"><ArrowCounterClockwise size={17} /> 返回上一步</button>
         <button className="quiet-button" onClick={arrange}><SquaresFour size={17} /> Arrange</button>
         <div className="add-menu-wrap"><button className="primary-button" onClick={() => setAddMenuOpen((open) => !open)}><UploadSimple size={17} /> Add <CaretDown size={11} /></button>{addMenuOpen && <div className="add-menu"><button onClick={() => { fileRef.current.click(); setAddMenuOpen(false); }}><UploadSimple size={16} /><span><strong>上传文件</strong><small>图片、视频、音频、TXT</small></span></button><button onClick={() => { setTextDialogOpen(true); setAddMenuOpen(false); }}><TextT size={16} /><span><strong>添加文字</strong><small>直接写入画布</small></span></button></div>}</div>
@@ -548,6 +579,8 @@ export function WeshopWorkspace({ onExit, embedded = false, initialActionCursor 
     </div>}
 
     {textDialogOpen && <div className="dialog-backdrop" role="dialog" aria-modal="true" aria-label="添加文字" onPointerDown={() => setTextDialogOpen(false)}><form className="text-dialog" onPointerDown={(event) => event.stopPropagation()} onSubmit={(event) => { event.preventDefault(); addTextCard(); }}><span className="eyebrow">TEXT MATERIAL</span><h2>添加文字到画布</h2><textarea autoFocus value={newText} onChange={(event) => setNewText(event.target.value)} placeholder="写下提示词、说明、脚本或任何需要保留的文字…" rows={7} /><div className="dialog-actions"><button type="button" onClick={() => setTextDialogOpen(false)}>取消</button><button className="submit-edit" type="submit" disabled={!newText.trim()}><TextT size={16} />添加文字</button></div></form></div>}
+
+    {apiDialogOpen && <div className="dialog-backdrop" role="dialog" aria-modal="true" aria-label="配置 WeShop API Key" onPointerDown={() => setApiDialogOpen(false)}><form className="api-key-dialog" onPointerDown={(event) => event.stopPropagation()} onSubmit={(event) => { event.preventDefault(); if (apiKeyDraft.trim()) void saveApiKey(apiKeyDraft.trim()); }}><div className="api-key-icon"><Key size={22} /></div><span className="eyebrow">WESHOP OPENAPI</span><h2>连接 WeShop</h2><p>密钥只保存在这台电脑的 Harness 主机中，不会写入画布、对话或浏览器存储。</p>{apiConfig?.configured && <div className="api-key-status"><CheckCircle size={16} weight="fill" /><span>当前已配置 · {apiConfig.source === "canvas" ? "画布私密存储" : apiConfig.source === "plugin" ? "插件设置" : "环境变量"}</span></div>}<label><span>API Key</span><input autoFocus type="password" autoComplete="off" value={apiKeyDraft} onChange={(event) => setApiKeyDraft(event.target.value)} placeholder={apiConfig?.configured ? "输入新密钥以替换当前配置" : "粘贴 WeShop API Key"} /></label><a href="https://open.weshop.ai/authorization/apikey" target="_blank" rel="noreferrer">获取 WeShop API Key ↗</a><div className="dialog-actions">{apiConfig?.source === "canvas" && <button type="button" className="clear-api-key" disabled={apiSaving} onClick={() => void saveApiKey("")}>清除画布密钥</button>}<span /><button type="button" onClick={() => setApiDialogOpen(false)}>取消</button><button className="submit-edit" type="submit" disabled={!apiKeyDraft.trim() || apiSaving}>{apiSaving ? "保存中…" : "安全保存"}</button></div></form></div>}
 
     {toast && <div className="toast"><span className="toast-dot" />{toast}<small>在 DeepSeek 对话中继续即可执行</small></div>}
 

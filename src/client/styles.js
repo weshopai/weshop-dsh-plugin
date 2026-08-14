@@ -41,6 +41,7 @@ const CSS = `
 .weshop-root .primary-button { padding: 0 14px; color: #fff; background: #232421; }
 .quiet-button:hover, .primary-button:hover { transform: translateY(-1px); }
 .quiet-button:disabled { opacity: .38; transform: none; cursor: default; }
+.api-key-button.is-configured { color: #285e48; background: #e5eee8; }
 
 .canvas { position: absolute; inset: 68px 0 0; overflow: hidden; touch-action: none; cursor: grab; background: #f8f8f5; }
 .canvas:active { cursor: grabbing; }
@@ -113,6 +114,19 @@ const CSS = `
 .edit-copy textarea:focus { border-color: #536f62; box-shadow: 0 0 0 3px rgba(83,111,98,.1); }
 .dialog-actions { margin-top: auto; padding-top: 22px; display: flex; justify-content: flex-end; gap: 8px; }
 .dialog-actions button { height: 36px; padding: 0 14px; border: 0; border-radius: 9px; background: #ecece6; cursor: pointer; }
+.api-key-dialog { width: min(430px, calc(100vw - 36px)); padding: 28px; border: 1px solid rgba(31,33,29,.1); border-radius: 20px; color: #30322e; background: #fbfbf7; box-shadow: 0 28px 90px rgba(24,27,23,.22); }
+.api-key-dialog h2 { margin: 8px 0 7px; font: 700 24px/1.15 "Manrope", system-ui, sans-serif; }
+.api-key-dialog > p { margin: 0 0 18px; color: #71736d; font-size: 12px; line-height: 1.55; }
+.api-key-icon { float: right; width: 42px; height: 42px; display: grid; place-items: center; border-radius: 13px; color: #2f654f; background: #e5eee8; }
+.api-key-status { display: flex; align-items: center; gap: 7px; margin-bottom: 14px; padding: 10px 11px; border-radius: 10px; color: #2f654f; background: #edf4ef; font-size: 11px; }
+.api-key-dialog label { display: grid; gap: 7px; }
+.api-key-dialog label > span { color: #5d6059; font-size: 10px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; }
+.api-key-dialog input { height: 42px; padding: 0 12px; border: 1px solid #d8d9d2; border-radius: 10px; outline: none; color: #292b27; background: white; font: 500 13px/1 monospace; }
+.api-key-dialog input:focus { border-color: #4d7664; box-shadow: 0 0 0 3px rgba(77,118,100,.12); }
+.api-key-dialog > a { display: inline-block; margin-top: 10px; color: #376b56; font-size: 11px; text-decoration: none; }
+.api-key-dialog .dialog-actions { display: flex; align-items: center; gap: 7px; margin-top: 22px; }
+.api-key-dialog .dialog-actions > span { flex: 1; }
+.api-key-dialog .clear-api-key { color: #984f48; background: #f5eae7; }
 .dialog-actions .submit-edit { display: inline-flex; align-items: center; gap: 6px; color: white; background: #244d3e; }
 .dialog-actions .submit-edit:disabled { opacity: .38; cursor: default; }
 

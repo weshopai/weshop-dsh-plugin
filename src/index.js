@@ -22,7 +22,7 @@ import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import z from "@deepseek-ai/schemastery";
-import { registerNativeTools } from "./native-tools.js";
+import { registerNativeTools, setConfiguredApiKey } from "./native-tools.js";
 
 export const name = "weshop2.0";
 export const inject = ["webServer", "tools", "skills"];
@@ -38,6 +38,9 @@ const assetDirectory = process.env.WESHOP_ASSET_DIR || path.join(os.tmpdir(), "w
 const demoDirectory = process.env.WESHOP_DEMO_DIR || path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../assets");
 const skillDirectory = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../skills");
 const bundledPresetDirectory = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../presets/weshop-canvas");
+const dshHome = process.env.DSH_HOME || path.join(os.homedir(), ".dsh");
+const privateConfigDirectory = path.join(dshHome, "weshop-2-0");
+const apiKeyFile = path.join(privateConfigDirectory, "api-key");
 fs.mkdirSync(assetDirectory, { recursive: true });
 
 const bundledSkills = [
@@ -149,7 +152,9 @@ function readState() {
 export function apply(ctx, config = {}) {
   installBundledPreset();
   registerBundledSkills(ctx);
-  registerNativeTools(ctx, { apiKey: config.apiKey });
+  let canvasApiKey = "";
+  try { if (fs.existsSync(apiKeyFile)) canvasApiKey = fs.readFileSync(apiKeyFile, "utf8").trim(); } catch { /* Fall back to plugin/environment configuration. */ }
+  registerNativeTools(ctx, { apiKey: canvasApiKey || config.apiKey });
   ctx.effect(() => ctx.webServer.register({
     kind: "prefix",
     path: "/api/weshop",
@@ -157,8 +162,29 @@ export function apply(ctx, config = {}) {
       const pathname = new URL(request.url ?? "/", "http://127.0.0.1").pathname;
 
       if (pathname === "/api/weshop/config" && request.method === "GET") {
-        const configured = Boolean(config.apiKey || process.env.WESHOP_API_KEY);
-        json(response, 200, { configured, source: config.apiKey ? "plugin" : process.env.WESHOP_API_KEY ? "environment" : null });
+        const configured = Boolean(canvasApiKey || config.apiKey || process.env.WESHOP_API_KEY);
+        json(response, 200, { configured, source: canvasApiKey ? "canvas" : config.apiKey ? "plugin" : process.env.WESHOP_API_KEY ? "environment" : null });
+        return;
+      }
+
+      if (pathname === "/api/weshop/config" && request.method === "POST") {
+        try {
+          const body = await readJsonBody(request, 10_000);
+          const nextKey = typeof body.apiKey === "string" ? body.apiKey.trim() : "";
+          if (nextKey.length > 4096) throw new Error("API key is too long");
+          if (nextKey) {
+            fs.mkdirSync(privateConfigDirectory, { recursive: true, mode: 0o700 });
+            fs.writeFileSync(apiKeyFile, nextKey, { encoding: "utf8", mode: 0o600 });
+            fs.chmodSync(apiKeyFile, 0o600);
+            canvasApiKey = nextKey;
+          } else {
+            if (fs.existsSync(apiKeyFile)) fs.unlinkSync(apiKeyFile);
+            canvasApiKey = "";
+          }
+          setConfiguredApiKey(canvasApiKey || config.apiKey);
+          const configured = Boolean(canvasApiKey || config.apiKey || process.env.WESHOP_API_KEY);
+          json(response, 200, { ok: true, configured, source: canvasApiKey ? "canvas" : config.apiKey ? "plugin" : process.env.WESHOP_API_KEY ? "environment" : null });
+        } catch { json(response, 400, { ok: false, error: "invalid API key configuration" }); }
         return;
       }
 

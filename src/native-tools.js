@@ -23,6 +23,10 @@ const progressFile = process.env.WESHOP_PROGRESS_FILE || path.join(os.tmpdir(), 
 
 const WESHOP_BASE_URL = process.env.WESHOP_BASE_URL || "https://openapi.weshop.ai/openapi";
 let configuredApiKey = "";
+
+export function setConfiguredApiKey(apiKey) {
+  configuredApiKey = typeof apiKey === "string" ? apiKey.trim() : "";
+}
 const WESHOP_POLL_INTERVAL_MS = Number(process.env.WESHOP_POLL_INTERVAL_MS || 3000);
 const WESHOP_POLL_MAX_MS = Number(process.env.WESHOP_POLL_MAX_MS || 600000);
 
@@ -311,7 +315,7 @@ const output = {
 
 /** Register every WeShop tool directly on the Cordis tool registry. */
 export function registerNativeTools(ctx, options = {}) {
-  configuredApiKey = typeof options.apiKey === "string" ? options.apiKey.trim() : "";
+  setConfiguredApiKey(options.apiKey);
   for (const schema of toolSchemas) {
     ctx.tools.register({
       name: schema.name,
