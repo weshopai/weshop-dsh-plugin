@@ -6,7 +6,7 @@ import { join } from "node:path";
 import { spawnSync } from "node:child_process";
 
 const packageName = "weshop-dsh-plugin";
-const legacyPackages = ["@weshop/dsh-weshop-2-0", "@weshopai/dsh-weshop-2-0"];
+const legacyPackages = ["@weshop/dsh-canvas", "@weshop/dsh-weshop-2-0", "@weshopai/dsh-weshop-2-0"];
 const command = process.argv[2] || "setup";
 
 if (["-h", "--help", "help"].includes(command)) {

@@ -5,7 +5,7 @@
 **内置于 DeepSeek Harness 的 AI 电商视觉工作台。**
 
 [![License](https://img.shields.io/badge/license-MIT-2ea44f.svg)](./LICENSE)
-[![Version](https://img.shields.io/badge/version-0.1.0-282828.svg)]()
+[![Version](https://img.shields.io/badge/version-0.1.1-282828.svg)]()
 [![Platform](https://img.shields.io/badge/platform-DeepSeek%20Harness%20plugin-282828.svg)]()
 [![English](https://img.shields.io/badge/Language-English-7530FE.svg)](./README.md)
 
@@ -57,7 +57,7 @@ WeShop for DeepSeek Harness 把 WeShop 的电商视觉工作台直接接入 [Dee
 
 ## 🚀 快速上手
 
-### 前置步骤：先安装 Harness
+### 开始前
 
 安装 Node.js，然后至少成功启动一次官方 Harness Web UI：
 
@@ -65,11 +65,11 @@ WeShop for DeepSeek Harness 把 WeShop 的电商视觉工作台直接接入 [Dee
 npx @deepseek-ai/dsh web
 ```
 
-Harness 默认打开在 `http://127.0.0.1:3080`。修改 Web profile 前，请先停止 Harness。
+Harness 默认打开在 `http://127.0.0.1:3080`。看到页面后即可先关闭 Harness，再继续下面的步骤。
 
 也可以按照官方的 [DeepSeek Harness 源码安装说明](https://github.com/deepseek-ai/deepseek-harness#run)进行安装。
 
-### 1. 安装 WeShop
+### 首次安装
 
 关闭 Harness 后，只需运行一条命令：
 
@@ -77,17 +77,33 @@ Harness 默认打开在 `http://127.0.0.1:3080`。修改 Web profile 前，请�
 npx weshop-dsh-plugin setup
 ```
 
-安装器会将插件安装到 Harness Web profile、启用 bundle，并自动迁移旧版 WeShop 插件。无需 GitHub 账号或 access token。
+安装器会将 WeShop 安装到 Harness Web profile、启用 bundle，并在发现旧版 WeShop 时自动迁移。无需 GitHub 账号、access token，也不需要手动改文件。
 
-需要更新时再次运行同一条命令即可。
-
-### 2. 重启 Harness
+然后重启 Harness：
 
 ```bash
 npx @deepseek-ai/dsh web
 ```
 
-新建或打开使用 **WeShop 画布模式** Preset 的任务。WeShop for DeepSeek Harness 会在第一次启用时安装随包提供的 Preset。
+新建或打开一个任务，选择 **WeShop 画布模式** Preset。首次启用时会自动安装该 Preset。
+
+### 更新 WeShop
+
+最简单的更新方式是关闭 Harness 后运行：
+
+```bash
+npx weshop-dsh-plugin setup
+```
+
+如果已安装公开 npm 版，也可以运行：
+
+```bash
+cd ~/.dsh/profiles/web
+pnpm update weshop-dsh-plugin
+```
+
+> **此前安装过旧版？**
+> 如果此前通过 `.tgz` 安装过，或使用的是 `@weshop/dsh-canvas`、`@weshop/dsh-weshop-2-0`、`@weshopai/dsh-weshop-2-0`，首次运行一次 `npx weshop-dsh-plugin setup` 即可。它会自动替换旧包和 bundle 配置；之后即可使用上面的任一更新方式。
 
 ### 高级用法：构建可迁移安装包
 
@@ -102,18 +118,15 @@ pnpm build
 pnpm pack
 ```
 
-完成后会生成类似 `weshop-dsh-plugin-0.1.0.tgz` 的版本化文件。
+完成后会生成类似 `weshop-dsh-plugin-0.1.1.tgz` 的版本化文件。
 
 安装到 Harness Web profile：
 
 ```bash
-PLUGIN_TARBALL="/你的绝对路径/weshop-dsh-plugin-0.1.0.tgz"
+PLUGIN_TARBALL="/你的绝对路径/weshop-dsh-plugin-0.1.1.tgz"
 cd ~/.dsh/profiles/web
 pnpm add "$PLUGIN_TARBALL"
 ```
-
-> **⚠️ 从 `@weshop/dsh-canvas` 升级**
-> 如果安装过旧版 `@weshop/dsh-canvas`，请先从 dependencies 和 bundles 中删除。新旧实现同时运行可能造成重复画布或 `shell.overlay` loader 报错。
 
 ## ⚙️ 配置 WeShop OpenAPI
 
