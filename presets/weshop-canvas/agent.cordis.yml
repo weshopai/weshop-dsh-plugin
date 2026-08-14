@@ -30,8 +30,13 @@
       1. Read the canvas first: call weshop_canvas_get_state
          (and weshop_canvas_get_selection when the user
          says "this", "selected", or points at an item).
-      2. For any generation, editing, or transformation task, load the
-         weshop-openapi skill and follow its workflow: intent compilation,
+      2. MANDATORY PER-TURN SKILL GATE: for every new user turn requesting
+         generation, editing, transformation, upscaling, or animation, invoke
+         the weshop-openapi Skill through the Skill tool before Bash, Read,
+         Web search, or weshop_generate_run. Invoke it again even if it was
+         used earlier in the conversation, and after compaction, retry, or
+         handoff. Reading SKILL.md/README from the filesystem does not count.
+         Follow its workflow: intent compilation,
          endpoint selection, uploads, request parameters, polling, and
          API-key handling. Never reveal WESHOP_API_KEY.
       3. Publish every completed output to the canvas automatically:

@@ -72,15 +72,24 @@ async function weshopPollRun(executionId) {
   }
 }
 
-/** Create a WeShop run. Accepts a local originalImage path (uploaded automatically). */
+async function resolveImageReference(value) {
+  return /^https?:\/\//.test(value) ? value : weshopUpload(value);
+}
+
+/** Create a WeShop run. Local image references are uploaded automatically. */
 async function weshopCreateRun(input) {
   const agent = { name: input.agent, version: input.version || "v1.0" };
   const runInput = { ...(input.taskName ? { taskName: input.taskName } : {}) };
   const params = { ...(input.params || {}) };
   if (input.originalImage) {
-    const url = /^https?:\/\//.test(input.originalImage) ? input.originalImage : await weshopUpload(input.originalImage);
+    const url = await resolveImageReference(input.originalImage);
     runInput.originalImage = url;
     params.originalImage = url;
+  }
+  if (input.referenceImages?.length) {
+    const images = await Promise.all(input.referenceImages.map(resolveImageReference));
+    runInput.images = images;
+    params.images = images;
   }
   return weshopRequest("/agent/runs", { method: "POST", jsonBody: { agent, input: runInput, params } });
 }
@@ -213,14 +222,15 @@ const toolSchemas = [
   },
   {
     name: "weshop_generate_run",
-    description: "Run a WeShop OpenAPI generation/editing task (virtual try-on, model swap, background replace, pose change, canvas expand, background removal, product/photo generation, etc.). The API key is handled server-side; never echo it. Pass originalImage as a local path (uploaded automatically) or an https URL. See the weshop-openapi skill for per-agent parameters. After success, publish the output with weshop_canvas_publish_result.",
+    description: "Run a WeShop OpenAPI generation/editing task. MANDATORY: invoke the weshop-openapi Skill during the current user turn before calling this tool, even if it was invoked earlier in the conversation. The API key is handled server-side; never echo it. Use originalImage for legacy single-source agents; use referenceImages for agents such as gpt-image that accept params.images. Local paths upload automatically. After success, publish every output to the canvas.",
     inputSchema: {
       type: "object",
-      required: ["agent", "originalImage", "params"],
+      required: ["agent", "params"],
       properties: {
         agent: { type: "string", description: "Agent name, e.g. aimodel, aiproduct, aipose, expandimage, removeBG, virtualtryon, seedream, gpt-image, midjourney, kling." },
         version: { type: "string", description: "Agent version; default v1.0." },
         originalImage: { type: "string", description: "Local absolute path (auto-uploaded) or https URL of the source image." },
+        referenceImages: { type: "array", description: "Local absolute paths or HTTPS URLs for agents whose API uses input.images/params.images (for example gpt-image, up to 5). Local files upload automatically.", items: { type: "string" } },
         taskName: { type: "string", description: "Optional human-readable task label." },
         params: { type: "object", description: "Agent-specific run parameters (maskType, generatedContent, textDescription, batchCount, ...). See the weshop-openapi skill.", additionalProperties: true },
         wait: { type: "boolean", description: "Poll to completion and return final result URLs (default true). Set false to return the executionId immediately." },
@@ -277,7 +287,7 @@ async function executeTool(name, input) {
       return { ok: true, queued: true, itemId: action.payload.id, kind: action.payload.kind };
     }
     if (name === "weshop_generate_run") {
-      if (!input.agent || !input.originalImage || !input.params) throw new Error("agent, originalImage, and params are required");
+      if (!input.agent || !input.params) throw new Error("agent and params are required");
       const created = await weshopCreateRun(input);
       const executionId = created?.meta?.executionId;
       if (!executionId) throw new Error("WeShop did not return an executionId");
