@@ -3,6 +3,7 @@ import { useState } from "react";
 import { injectWeshopStyles } from "./styles.js";
 import { WeshopWorkspace } from "./CanvasWorkspace.jsx";
 import { CanvasChat } from "./CanvasChat.jsx";
+import { initialLocale, saveLocale } from "./i18n.js";
 
 /**
  * Result canvas panel for the weshop-canvas agent mode. Registered into
@@ -14,12 +15,14 @@ import { CanvasChat } from "./CanvasChat.jsx";
  */
 function SplitPanel({ onExit, initialActionCursor, session, sessionTitle }) {
   const [selection, setSelection] = useState([]);
+  const [locale, setLocaleState] = useState(initialLocale);
+  const setLocale = (next) => { saveLocale(next); setLocaleState(next); };
   return (
     <div className="weshop-root weshop-split weshop-studio" style={{ position: "fixed", inset: 0, zIndex: 1500, pointerEvents: "auto", overflow: "hidden" }}>
       <main className="weshop-canvas-pane">
-        <WeshopWorkspace onExit={onExit} onSelectionChange={setSelection} embedded initialActionCursor={initialActionCursor} />
+        <WeshopWorkspace onExit={onExit} onSelectionChange={setSelection} locale={locale} onLocaleChange={setLocale} embedded initialActionCursor={initialActionCursor} />
       </main>
-      <CanvasChat session={session} sessionTitle={sessionTitle} selection={selection} onExit={onExit} />
+      <CanvasChat session={session} sessionTitle={sessionTitle} selection={selection} locale={locale} onExit={onExit} />
     </div>
   );
 }

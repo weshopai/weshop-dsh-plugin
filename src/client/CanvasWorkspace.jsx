@@ -4,6 +4,7 @@ import {
   CaretDown, CheckCircle, CursorClick, Hand, Key, MagnifyingGlassPlus, Minus, MusicNotes, PencilSimple, Plus,
   Sparkle, SquaresFour, TextT, Trash, UploadSimple, VideoCamera, X,
 } from "@phosphor-icons/react";
+import { initialLocale, saveLocale, translator } from "./i18n.js";
 
 const STORAGE_KEY = "weshop-2-0-dsh:spaces:v1";
 const blankCanvas = (index = 1) => ({ id: `canvas-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`, title: index === 1 ? "Untitled space" : `Untitled space ${index}`, items: [], view: { x: 0, y: 0, scale: .72 } });
@@ -12,7 +13,11 @@ function restoreCanvases() {
   return [blankCanvas()];
 }
 
-export function WeshopWorkspace({ onExit, onSelectionChange, embedded = false, initialActionCursor = Date.now() }) {
+export function WeshopWorkspace({ onExit, onSelectionChange, locale: controlledLocale, onLocaleChange, embedded = false, initialActionCursor = Date.now() }) {
+  const [localLocale, setLocalLocale] = useState(initialLocale);
+  const locale = controlledLocale || localLocale;
+  const t = useMemo(() => translator(locale), [locale]);
+  const changeLocale = (next) => { saveLocale(next); if (onLocaleChange) onLocaleChange(next); else setLocalLocale(next); };
   const [canvases, setCanvases] = useState(restoreCanvases);
   const [activeCanvasId, setActiveCanvasId] = useState(canvases[0].id);
   const activeInitial = canvases.find((canvas) => canvas.id === activeCanvasId) || canvases[0];
@@ -68,7 +73,7 @@ export function WeshopWorkspace({ onExit, onSelectionChange, embedded = false, i
     setItems(previous);
     setSelectedIds([]);
     setUndoDepth(historyRef.current.length);
-    notify("已返回上一步");
+    notify(t("已返回上一步"));
   };
 
   useEffect(() => {
@@ -149,8 +154,8 @@ export function WeshopWorkspace({ onExit, onSelectionChange, embedded = false, i
       setApiConfig(result);
       setApiKeyDraft("");
       setApiDialogOpen(false);
-      notify(apiKey ? "WeShop API Key 已保存" : result.configured ? "已恢复其他 API Key 配置" : "API Key 已清除");
-    } catch { notify("API Key 保存失败，请稍后重试"); }
+      notify(t(apiKey ? "WeShop API Key 已保存" : result.configured ? "已恢复其他 API Key 配置" : "API Key 已清除"));
+    } catch { notify(t("API Key 保存失败，请稍后重试")); }
     finally { setApiSaving(false); }
   };
 
@@ -453,8 +458,8 @@ export function WeshopWorkspace({ onExit, onSelectionChange, embedded = false, i
         body: JSON.stringify({ type, itemId: item.id, prompt }),
       });
       if (!response.ok) throw new Error("request failed");
-      notify(type === "reverse-prompt" ? "已提交反推提示词任务" : type === "upscale" ? "已提交高清放大任务" : "已提交局部编辑任务");
-    } catch { notify("任务提交失败，请确认本地画布服务正在运行"); }
+      notify(t(type === "reverse-prompt" ? "已提交反推提示词任务" : type === "upscale" ? "已提交高清放大任务" : "已提交局部编辑任务"));
+    } catch { notify(t("任务提交失败，请确认本地画布服务正在运行")); }
   };
 
   const removeSelected = () => {
@@ -478,10 +483,10 @@ export function WeshopWorkspace({ onExit, onSelectionChange, embedded = false, i
       link.click();
       link.remove();
       window.setTimeout(() => URL.revokeObjectURL(objectUrl), 1000);
-      notify("已开始下载");
+      notify(t("已开始下载"));
     } catch {
       window.open(selectedItem.src, "_blank", "noopener,noreferrer");
-      notify("原图已打开，可从浏览器保存");
+      notify(t("原图已打开，可从浏览器保存"));
     }
   };
 
@@ -511,19 +516,20 @@ export function WeshopWorkspace({ onExit, onSelectionChange, embedded = false, i
       <div className="brand-mark"><SquaresFour weight="fill" size={16} /></div>
       <div className="canvas-switcher">
         <input className="space-title" value={title} onChange={(event) => setTitle(event.target.value)} aria-label="Space title" />
-        <button className="switcher-trigger" onClick={() => setCanvasMenuOpen((open) => !open)} aria-label="管理画布" aria-expanded={canvasMenuOpen}><CaretDown size={13} /></button>
+        <button className="switcher-trigger" onClick={() => setCanvasMenuOpen((open) => !open)} aria-label={t("管理画布")} aria-expanded={canvasMenuOpen}><CaretDown size={13} /></button>
         {canvasMenuOpen && <div className="canvas-menu">
           <div className="canvas-menu-label">CANVASES</div>
           {canvases.map((canvas) => <button key={canvas.id} className={canvas.id === activeCanvasId ? "is-active" : ""} onClick={() => openCanvas(canvas)}><span>{canvas.id === activeCanvasId ? title : canvas.title}</span><small>{canvas.id === activeCanvasId ? items.length : canvas.items.length}</small></button>)}
-          <div className="canvas-menu-actions"><button onClick={createCanvas}><Plus size={14} />新建画布</button><button className="delete-canvas" onClick={deleteCanvas}><Trash size={14} />删除当前</button></div>
+          <div className="canvas-menu-actions"><button onClick={createCanvas}><Plus size={14} />{t("新建画布")}</button><button className="delete-canvas" onClick={deleteCanvas}><Trash size={14} />{t("删除当前")}</button></div>
         </div>}
       </div>
       <span className="saved-state">Saved locally</span>
       <div className="topbar-actions">
-        <button className={`quiet-button api-key-button${apiConfig?.configured ? " is-configured" : ""}`} onClick={() => setApiDialogOpen(true)} title="配置 WeShop API Key">{apiConfig?.configured ? <CheckCircle size={17} weight="fill" /> : <Key size={17} />} {apiConfig?.configured ? "API 已配置" : "配置 API Key"}</button>
-        <button className="quiet-button undo-button" onClick={undo} disabled={undoDepth === 0} title="返回上一步 (⌘/Ctrl+Z)"><ArrowCounterClockwise size={17} /> 返回上一步</button>
+        <label className="language-switch" title={t("语言")}><select value={locale} onChange={(event) => changeLocale(event.target.value)} aria-label={t("语言")}><option value="zh-CN">中文</option><option value="en">EN</option></select></label>
+        <button className={`quiet-button api-key-button${apiConfig?.configured ? " is-configured" : ""}`} onClick={() => setApiDialogOpen(true)} title={t("配置 WeShop API Key")}>{apiConfig?.configured ? <CheckCircle size={17} weight="fill" /> : <Key size={17} />} {t(apiConfig?.configured ? "API 已配置" : "配置 API Key")}</button>
+        <button className="quiet-button undo-button" onClick={undo} disabled={undoDepth === 0} title={t("返回上一步 (⌘/Ctrl+Z)")}><ArrowCounterClockwise size={17} /> {t("返回上一步")}</button>
         <button className="quiet-button" onClick={arrange}><SquaresFour size={17} /> Arrange</button>
-        <div className="add-menu-wrap"><button className="primary-button" onClick={() => setAddMenuOpen((open) => !open)}><UploadSimple size={17} /> Add <CaretDown size={11} /></button>{addMenuOpen && <div className="add-menu"><button onClick={() => { fileRef.current.click(); setAddMenuOpen(false); }}><UploadSimple size={16} /><span><strong>上传文件</strong><small>图片、视频、音频、TXT</small></span></button><button onClick={() => { setTextDialogOpen(true); setAddMenuOpen(false); }}><TextT size={16} /><span><strong>添加文字</strong><small>直接写入画布</small></span></button></div>}</div>
+        <div className="add-menu-wrap"><button className="primary-button" onClick={() => setAddMenuOpen((open) => !open)}><UploadSimple size={17} /> Add <CaretDown size={11} /></button>{addMenuOpen && <div className="add-menu"><button onClick={() => { fileRef.current.click(); setAddMenuOpen(false); }}><UploadSimple size={16} /><span><strong>{t("上传文件")}</strong><small>{t("图片、视频、音频、TXT")}</small></span></button><button onClick={() => { setTextDialogOpen(true); setAddMenuOpen(false); }}><TextT size={16} /><span><strong>{t("添加文字")}</strong><small>{t("直接写入画布")}</small></span></button></div>}</div>
       </div>
     </header>
 
@@ -558,48 +564,48 @@ export function WeshopWorkspace({ onExit, onSelectionChange, embedded = false, i
 
       {selectionRect && <div className="selection-marquee" style={{ left: selectionRect.x, top: selectionRect.y, width: selectionRect.width, height: selectionRect.height }} />}
 
-      {!items.length && <button className="empty-state" onClick={() => setAddMenuOpen(true)}><ImageSquare size={26} /><strong>Add your first material</strong><span>支持图片、视频、音频和文字，生成结果会自动出现。</span></button>}
-      {dropActive && <div className="drop-overlay"><UploadSimple size={30} /><strong>拖到这里添加素材</strong><span>图片、视频、音频和 TXT</span></div>}
-      {!!selectedItems.length && <div className="selection-actions" onPointerDown={(event) => event.stopPropagation()}><span className="selection-count">{selectedItems.length} selected</span>{selectedItems.length === 1 && selectedItem?.src && <button type="button" onClick={() => void downloadSelected()} aria-label="下载所选内容" title="下载"><DownloadSimple size={17} /></button>}<button type="button" onClick={removeSelected} aria-label="删除所选内容" title="删除"><Trash size={17} /></button></div>}
-      <div className="canvas-tool-controls" onPointerDown={(event) => event.stopPropagation()}><button className={canvasMode === "select" ? "is-active" : ""} onClick={() => setCanvasMode("select")} aria-label="选择工具" title="选择 / 框选 (V)"><CursorClick size={17} /></button><button className={canvasMode === "pan" ? "is-active" : ""} onClick={() => setCanvasMode("pan")} aria-label="手型工具" title="拖动画布 (H)，或按住 Space"><Hand size={17} /></button></div>
+      {!items.length && <button className="empty-state" onClick={() => setAddMenuOpen(true)}><ImageSquare size={26} /><strong>Add your first material</strong><span>{t("支持图片、视频、音频和文字，生成结果会自动出现。")}</span></button>}
+      {dropActive && <div className="drop-overlay"><UploadSimple size={30} /><strong>{t("拖到这里添加素材")}</strong><span>{t("图片、视频、音频和 TXT")}</span></div>}
+      {!!selectedItems.length && <div className="selection-actions" onPointerDown={(event) => event.stopPropagation()}><span className="selection-count">{selectedItems.length} selected</span>{selectedItems.length === 1 && selectedItem?.src && <button type="button" onClick={() => void downloadSelected()} aria-label={t("下载所选内容")} title={t("下载")}><DownloadSimple size={17} /></button>}<button type="button" onClick={removeSelected} aria-label={t("删除所选内容")} title={t("删除")}><Trash size={17} /></button></div>}
+      <div className="canvas-tool-controls" onPointerDown={(event) => event.stopPropagation()}><button className={canvasMode === "select" ? "is-active" : ""} onClick={() => setCanvasMode("select")} aria-label={t("选择工具")} title={t("选择 / 框选 (V)")}><CursorClick size={17} /></button><button className={canvasMode === "pan" ? "is-active" : ""} onClick={() => setCanvasMode("pan")} aria-label={t("手型工具")} title={t("拖动画布 (H)，或按住 Space")}><Hand size={17} /></button></div>
       <div className="canvas-controls" onPointerDown={(event) => event.stopPropagation()}><button onClick={() => zoomAt(view.scale / 1.18, innerWidth / 2, innerHeight / 2)} aria-label="Zoom out"><Minus size={16} /></button><span>{Math.round(view.scale * 100)}%</span><button onClick={() => zoomAt(view.scale * 1.18, innerWidth / 2, innerHeight / 2)} aria-label="Zoom in"><Plus size={16} /></button><i /><button onClick={fitAll} aria-label="Fit all"><ArrowsInSimple size={17} /></button><button onClick={() => setView({ x: 0, y: 0, scale: .72 })} aria-label="Reset view"><CornersOut size={17} /></button></div>
     </main>
 
     {progress?.stage && progress.stage !== "idle" && <aside className={`agent-progress stage-${progress.stage}`}>
-      <div className="progress-head"><span className="progress-pulse" /><strong>{progress.label || "WeShop 正在处理"}</strong><small>{elapsed ? `${Math.floor(elapsed / 60)}:${String(elapsed % 60).padStart(2, "0")}` : progress.updatedAt ? new Date(progress.updatedAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : ""}</small></div>
+      <div className="progress-head"><span className="progress-pulse" /><strong>{progress.label || t("WeShop 正在处理")}</strong><small>{elapsed ? `${Math.floor(elapsed / 60)}:${String(elapsed % 60).padStart(2, "0")}` : progress.updatedAt ? new Date(progress.updatedAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : ""}</small></div>
       {progress.summary && <p>{progress.summary}</p>}
       <div className="progress-track"><span style={{ width: `${Math.max(3, Math.min(100, progress.percent ?? ({ interpreting: 8, researching: 14, planning: 22, "prompt-ready": 32, generating: 58, publishing: 92, complete: 100, error: 100 }[progress.stage] || 3)))}%` }} /></div>
-      <div className="progress-meta">{progress.model && <span>模型 <b>{progress.model}</b></span>}{progress.promptStatus && <span>Prompt <b>{progress.promptStatus}</b></span>}{progress.outputPlan && <span>输出 <b>{progress.outputPlan}</b></span>}</div>
+      <div className="progress-meta">{progress.model && <span>{t("模型")} <b>{progress.model}</b></span>}{progress.promptStatus && <span>Prompt <b>{progress.promptStatus}</b></span>}{progress.outputPlan && <span>{t("输出")} <b>{progress.outputPlan}</b></span>}</div>
     </aside>}
 
     {contextMenu && <div className="context-menu" style={{ left: contextMenu.x, top: contextMenu.y }} onPointerDown={(event) => event.stopPropagation()}>
-      <div className="context-heading"><span>{contextMenu.item.kind === "material" ? "素材" : "结果"}</span><strong>{contextMenu.item.title}</strong></div>
-      {(contextMenu.item.mediaType || "image") === "image" && <><button onClick={() => queueOperation("reverse-prompt", contextMenu.item)}><Sparkle size={17} /><span><strong>反推提示词</strong><small>分析画面并生成可复用提示词</small></span></button><button onClick={() => queueOperation("upscale", contextMenu.item)}><MagicWand size={17} /><span><strong>高清放大</strong><small>通过 WeShop 增强清晰度</small></span></button></>}
-      <button onClick={() => { setLightbox(contextMenu.item); setContextMenu(null); }}><MagnifyingGlassPlus size={17} /><span><strong>查看大图</strong><small>在画布上方预览原图</small></span></button>
-      {(contextMenu.item.mediaType || "image") === "image" && <button onClick={() => { setEditDialog(contextMenu.item); setEditPrompt(""); setContextMenu(null); }}><PencilSimple size={17} /><span><strong>局部编辑</strong><small>描述需要修改的区域和内容</small></span></button>}
+      <div className="context-heading"><span>{t(contextMenu.item.kind === "material" ? "素材" : "结果")}</span><strong>{contextMenu.item.title}</strong></div>
+      {(contextMenu.item.mediaType || "image") === "image" && <><button onClick={() => queueOperation("reverse-prompt", contextMenu.item)}><Sparkle size={17} /><span><strong>{t("反推提示词")}</strong><small>{t("分析画面并生成可复用提示词")}</small></span></button><button onClick={() => queueOperation("upscale", contextMenu.item)}><MagicWand size={17} /><span><strong>{t("高清放大")}</strong><small>{t("通过 WeShop 增强清晰度")}</small></span></button></>}
+      <button onClick={() => { setLightbox(contextMenu.item); setContextMenu(null); }}><MagnifyingGlassPlus size={17} /><span><strong>{t("查看大图")}</strong><small>{t("在画布上方预览原图")}</small></span></button>
+      {(contextMenu.item.mediaType || "image") === "image" && <button onClick={() => { setEditDialog(contextMenu.item); setEditPrompt(""); setContextMenu(null); }}><PencilSimple size={17} /><span><strong>{t("局部编辑")}</strong><small>{t("描述需要修改的区域和内容")}</small></span></button>}
     </div>}
 
     {lightbox && <div className="lightbox" role="dialog" aria-modal="true" aria-label={`查看 ${lightbox.title}`} onPointerDown={() => setLightbox(null)}>
-      <button className="modal-close" onClick={() => setLightbox(null)} aria-label="关闭"><X size={19} /></button>
+      <button className="modal-close" onClick={() => setLightbox(null)} aria-label={t("关闭")}><X size={19} /></button>
       {(lightbox.mediaType || "image") === "image" && <img src={lightbox.src} alt={lightbox.title} onPointerDown={(event) => event.stopPropagation()} />}
       {lightbox.mediaType === "video" && <video className="lightbox-video" src={lightbox.src} controls autoPlay onPointerDown={(event) => event.stopPropagation()} />}
       {lightbox.mediaType === "audio" && <div className="lightbox-audio" onPointerDown={(event) => event.stopPropagation()}><MusicNotes size={54} weight="duotone" /><strong>{lightbox.title}</strong><audio src={lightbox.src} controls autoPlay /></div>}
       {lightbox.mediaType === "text" && <article className="lightbox-text" onPointerDown={(event) => event.stopPropagation()}>{lightbox.content}</article>}
-      <div className="lightbox-caption"><strong>{lightbox.title}</strong><span>{lightbox.kind === "material" ? "素材" : "结果"}</span></div>
+      <div className="lightbox-caption"><strong>{lightbox.title}</strong><span>{t(lightbox.kind === "material" ? "素材" : "结果")}</span></div>
     </div>}
 
-    {editDialog && <div className="dialog-backdrop" role="dialog" aria-modal="true" aria-label="局部编辑" onPointerDown={() => setEditDialog(null)}>
+    {editDialog && <div className="dialog-backdrop" role="dialog" aria-modal="true" aria-label={t("局部编辑")} onPointerDown={() => setEditDialog(null)}>
       <form className="edit-dialog" onPointerDown={(event) => event.stopPropagation()} onSubmit={(event) => { event.preventDefault(); if (!editPrompt.trim()) return; queueOperation("local-edit", editDialog, editPrompt.trim()); setEditDialog(null); }}>
         <div className="edit-preview"><img src={editDialog.src} alt={editDialog.title} /></div>
-        <div className="edit-copy"><span className="eyebrow">LOCAL EDIT</span><h2>想修改哪里？</h2><p>描述区域和预期效果，agent 会通过 WeShop 生成新结果，原图不会被覆盖。</p><textarea autoFocus value={editPrompt} onChange={(event) => setEditPrompt(event.target.value)} placeholder="例如：把左上角的天空改成日落，保持人物和构图不变" rows={4} /><div className="dialog-actions"><button type="button" onClick={() => setEditDialog(null)}>取消</button><button className="submit-edit" type="submit" disabled={!editPrompt.trim()}><Sparkle size={16} />提交编辑</button></div></div>
+        <div className="edit-copy"><span className="eyebrow">LOCAL EDIT</span><h2>{t("想修改哪里？")}</h2><p>{t("描述区域和预期效果，agent 会通过 WeShop 生成新结果，原图不会被覆盖。")}</p><textarea autoFocus value={editPrompt} onChange={(event) => setEditPrompt(event.target.value)} placeholder={t("例如：把左上角的天空改成日落，保持人物和构图不变")} rows={4} /><div className="dialog-actions"><button type="button" onClick={() => setEditDialog(null)}>{t("取消")}</button><button className="submit-edit" type="submit" disabled={!editPrompt.trim()}><Sparkle size={16} />{t("提交编辑")}</button></div></div>
       </form>
     </div>}
 
-    {textDialogOpen && <div className="dialog-backdrop" role="dialog" aria-modal="true" aria-label="添加文字" onPointerDown={() => setTextDialogOpen(false)}><form className="text-dialog" onPointerDown={(event) => event.stopPropagation()} onSubmit={(event) => { event.preventDefault(); addTextCard(); }}><span className="eyebrow">TEXT MATERIAL</span><h2>添加文字到画布</h2><textarea autoFocus value={newText} onChange={(event) => setNewText(event.target.value)} placeholder="写下提示词、说明、脚本或任何需要保留的文字…" rows={7} /><div className="dialog-actions"><button type="button" onClick={() => setTextDialogOpen(false)}>取消</button><button className="submit-edit" type="submit" disabled={!newText.trim()}><TextT size={16} />添加文字</button></div></form></div>}
+    {textDialogOpen && <div className="dialog-backdrop" role="dialog" aria-modal="true" aria-label={t("添加文字")} onPointerDown={() => setTextDialogOpen(false)}><form className="text-dialog" onPointerDown={(event) => event.stopPropagation()} onSubmit={(event) => { event.preventDefault(); addTextCard(); }}><span className="eyebrow">TEXT MATERIAL</span><h2>{t("添加文字到画布")}</h2><textarea autoFocus value={newText} onChange={(event) => setNewText(event.target.value)} placeholder={t("写下提示词、说明、脚本或任何需要保留的文字…")} rows={7} /><div className="dialog-actions"><button type="button" onClick={() => setTextDialogOpen(false)}>{t("取消")}</button><button className="submit-edit" type="submit" disabled={!newText.trim()}><TextT size={16} />{t("添加文字")}</button></div></form></div>}
 
-    {apiDialogOpen && <div className="dialog-backdrop" role="dialog" aria-modal="true" aria-label="配置 WeShop API Key" onPointerDown={() => setApiDialogOpen(false)}><form className="api-key-dialog" onPointerDown={(event) => event.stopPropagation()} onSubmit={(event) => { event.preventDefault(); if (apiKeyDraft.trim()) void saveApiKey(apiKeyDraft.trim()); }}><div className="api-key-icon"><Key size={22} /></div><span className="eyebrow">WESHOP OPENAPI</span><h2>连接 WeShop</h2><p>密钥只保存在这台电脑的 Harness 主机中，不会写入画布、对话或浏览器存储。</p>{apiConfig?.configured && <div className="api-key-status"><CheckCircle size={16} weight="fill" /><span>当前已配置 · {apiConfig.source === "canvas" ? "画布私密存储" : apiConfig.source === "plugin" ? "插件设置" : "环境变量"}</span></div>}<label><span>API Key</span><input autoFocus type="password" autoComplete="off" value={apiKeyDraft} onChange={(event) => setApiKeyDraft(event.target.value)} placeholder={apiConfig?.configured ? "输入新密钥以替换当前配置" : "粘贴 WeShop API Key"} /></label><a href="https://open.weshop.ai/authorization/apikey" target="_blank" rel="noreferrer">获取 WeShop API Key ↗</a><div className="dialog-actions">{apiConfig?.source === "canvas" && <button type="button" className="clear-api-key" disabled={apiSaving} onClick={() => void saveApiKey("")}>清除画布密钥</button>}<span /><button type="button" onClick={() => setApiDialogOpen(false)}>取消</button><button className="submit-edit" type="submit" disabled={!apiKeyDraft.trim() || apiSaving}>{apiSaving ? "保存中…" : "安全保存"}</button></div></form></div>}
+    {apiDialogOpen && <div className="dialog-backdrop" role="dialog" aria-modal="true" aria-label={t("配置 WeShop API Key")} onPointerDown={() => setApiDialogOpen(false)}><form className="api-key-dialog" onPointerDown={(event) => event.stopPropagation()} onSubmit={(event) => { event.preventDefault(); if (apiKeyDraft.trim()) void saveApiKey(apiKeyDraft.trim()); }}><div className="api-key-icon"><Key size={22} /></div><span className="eyebrow">WESHOP OPENAPI</span><h2>{t("连接 WeShop")}</h2><p>{t("密钥只保存在这台电脑的 Harness 主机中，不会写入画布、对话或浏览器存储。")}</p>{apiConfig?.configured && <div className="api-key-status"><CheckCircle size={16} weight="fill" /><span>{t("当前已配置")} · {t(apiConfig.source === "canvas" ? "画布私密存储" : apiConfig.source === "plugin" ? "插件设置" : "环境变量")}</span></div>}<label><span>API Key</span><input autoFocus type="password" autoComplete="off" value={apiKeyDraft} onChange={(event) => setApiKeyDraft(event.target.value)} placeholder={t(apiConfig?.configured ? "输入新密钥以替换当前配置" : "粘贴 WeShop API Key")} /></label><a href="https://open.weshop.ai/authorization/apikey" target="_blank" rel="noreferrer">{t("获取 WeShop API Key ↗")}</a><div className="dialog-actions">{apiConfig?.source === "canvas" && <button type="button" className="clear-api-key" disabled={apiSaving} onClick={() => void saveApiKey("")}>{t("清除画布密钥")}</button>}<span /><button type="button" onClick={() => setApiDialogOpen(false)}>{t("取消")}</button><button className="submit-edit" type="submit" disabled={!apiKeyDraft.trim() || apiSaving}>{t(apiSaving ? "保存中…" : "安全保存")}</button></div></form></div>}
 
-    {toast && <div className="toast"><span className="toast-dot" />{toast}<small>在 DeepSeek 对话中继续即可执行</small></div>}
+    {toast && <div className="toast"><span className="toast-dot" />{toast}<small>{t("在 DeepSeek 对话中继续即可执行")}</small></div>}
 
     {!embedded && <button className="weshop-exit" onClick={onExit} title="返回 DeepSeek Harness"><CaretDown size={0} />← Back to DSH</button>}    <input ref={fileRef} type="file" accept="image/*,video/*,audio/*,text/plain" multiple hidden onChange={importImages} />
   </div>;

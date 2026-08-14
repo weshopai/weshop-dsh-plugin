@@ -42,6 +42,9 @@ const CSS = `
 .quiet-button:hover, .primary-button:hover { transform: translateY(-1px); }
 .quiet-button:disabled { opacity: .38; transform: none; cursor: default; }
 .api-key-button.is-configured { color: #285e48; background: #e5eee8; }
+.language-switch { height: 30px; display: inline-flex; align-items: center; }
+.language-switch select { height: 30px; padding: 0 7px; border: 1px solid #ddded7; border-radius: 9px; outline: none; color: #5d6059; background: #f4f4ef; font-size: 9px; font-weight: 700; cursor: pointer; }
+.language-switch select:focus { border-color: #819389; box-shadow: 0 0 0 3px rgba(71,120,95,.08); }
 
 .canvas { position: absolute; inset: 68px 0 0; overflow: hidden; touch-action: none; background: #f8f8f5; }
 .canvas.mode-select { cursor: crosshair; }

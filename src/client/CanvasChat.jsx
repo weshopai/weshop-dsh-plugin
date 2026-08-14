@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { ArrowUp, Stop, X } from "@phosphor-icons/react";
+import { translator } from "./i18n.js";
 
-function CanvasQuestion({ wait }) {
+function CanvasQuestion({ wait, t }) {
   const questions = wait.payload.questions || [];
   const [index, setIndex] = useState(0);
   const [drafts, setDrafts] = useState(() => questions.map(() => ({ selected: [], custom: "", skipped: false })));
@@ -31,7 +32,7 @@ function CanvasQuestion({ wait }) {
     const missing = values.findIndex((value) => !completed(value));
     if (missing >= 0) {
       setIndex(missing);
-      setError("请选择一个选项或输入回答");
+      setError(t("请选择一个选项或输入回答"));
       return;
     }
     setBusy(true);
@@ -62,7 +63,7 @@ function CanvasQuestion({ wait }) {
   };
   const continueFlow = () => {
     if (!completed(draft)) {
-      setError("请选择一个选项或输入回答");
+      setError(t("请选择一个选项或输入回答"));
       return;
     }
     if (index < questions.length - 1) setIndex(index + 1);
@@ -91,10 +92,10 @@ function CanvasQuestion({ wait }) {
     <section className="canvas-question" aria-labelledby={`canvas-question-${question.id}`}>
       <div className="canvas-question-head">
         <div>
-          <span>{question.header || "需要你的选择"}</span>
+          <span>{question.header || t("需要你的选择")}</span>
           <strong id={`canvas-question-${question.id}`}>{question.question}</strong>
         </div>
-        <button type="button" onClick={() => void cancel()} disabled={busy} aria-label="取消问题"><X size={14} /></button>
+        <button type="button" onClick={() => void cancel()} disabled={busy} aria-label={t("取消问题")}><X size={14} /></button>
       </div>
       {question.detail && <p className="canvas-question-detail">{question.detail}</p>}
       {(question.options || []).length > 0 && (
@@ -113,21 +114,21 @@ function CanvasQuestion({ wait }) {
       <textarea
         value={draft.custom}
         onChange={(event) => update((current) => ({ ...current, custom: event.target.value, selected: question.multiSelect ? current.selected : [], skipped: false }))}
-        placeholder={(question.options || []).length ? "或者输入自己的答案" : "输入你的答案"}
+        placeholder={t((question.options || []).length ? "或者输入自己的答案" : "输入你的答案")}
         rows={2}
         disabled={busy}
       />
       {error && <div className="canvas-chat-error">{error}</div>}
       <div className="canvas-question-actions">
         <span>{index + 1} / {questions.length}</span>
-        <button type="button" onClick={skip} disabled={busy}>跳过</button>
-        <button type="button" className="is-primary" onClick={continueFlow} disabled={busy}>{index < questions.length - 1 ? "下一题" : "提交"}</button>
+        <button type="button" onClick={skip} disabled={busy}>{t("跳过")}</button>
+        <button type="button" className="is-primary" onClick={continueFlow} disabled={busy}>{t(index < questions.length - 1 ? "下一题" : "提交")}</button>
       </div>
     </section>
   );
 }
 
-function CanvasApproval({ wait }) {
+function CanvasApproval({ wait, t }) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const answer = async (outcome) => {
@@ -143,10 +144,10 @@ function CanvasApproval({ wait }) {
   };
   return (
     <section className="canvas-question canvas-approval">
-      <div className="canvas-question-head"><div><span>需要授权</span><strong>{wait.payload.reason || wait.payload.toolName || "允许执行此操作？"}</strong></div></div>
-      {wait.payload.toolName && <p className="canvas-question-detail">工具：{wait.payload.toolName}</p>}
+      <div className="canvas-question-head"><div><span>{t("需要授权")}</span><strong>{wait.payload.reason || wait.payload.toolName || t("允许执行此操作？")}</strong></div></div>
+      {wait.payload.toolName && <p className="canvas-question-detail">{t("工具")}：{wait.payload.toolName}</p>}
       {error && <div className="canvas-chat-error">{error}</div>}
-      <div className="canvas-question-actions"><span /><button type="button" onClick={() => void answer("rejected")} disabled={busy}>拒绝</button><button type="button" className="is-primary" onClick={() => void answer("allowed-once")} disabled={busy}>允许一次</button></div>
+      <div className="canvas-question-actions"><span /><button type="button" onClick={() => void answer("rejected")} disabled={busy}>{t("拒绝")}</button><button type="button" className="is-primary" onClick={() => void answer("allowed-once")} disabled={busy}>{t("允许一次")}</button></div>
     </section>
   );
 }
@@ -186,7 +187,8 @@ function chatRows(snapshot) {
   return rows;
 }
 
-export function CanvasChat({ session, sessionTitle, selection = [], onExit }) {
+export function CanvasChat({ session, sessionTitle, selection = [], locale = "en", onExit }) {
+  const t = useMemo(() => translator(locale), [locale]);
   const snapshot = useSyncExternalStore(
     (listener) => session.subscribe(listener),
     () => session.getSnapshot(),
@@ -234,7 +236,7 @@ export function CanvasChat({ session, sessionTitle, selection = [], onExit }) {
     setDraft("");
     try {
       const result = await session.prompt([{ type: "text", text: promptText }], "queue");
-      if (!result.ok) throw new Error(result.error?.message || "消息发送失败");
+      if (!result.ok) throw new Error(result.error?.message || t("消息发送失败"));
     } catch (reason) {
       setDraft(text);
       setError(reason instanceof Error ? reason.message : String(reason));
@@ -248,9 +250,9 @@ export function CanvasChat({ session, sessionTitle, selection = [], onExit }) {
       <header className="canvas-chat-head">
         <div>
           <span>WESHOP SESSION</span>
-          <strong>{sessionTitle || "当前对话"}</strong>
+          <strong>{sessionTitle || t("当前对话")}</strong>
         </div>
-        <button type="button" onClick={onExit} aria-label="关闭画布" title="返回 Harness">
+        <button type="button" onClick={onExit} aria-label={t("关闭画布")} title={t("返回 Harness")}>
           <X size={17} />
         </button>
       </header>
@@ -258,35 +260,35 @@ export function CanvasChat({ session, sessionTitle, selection = [], onExit }) {
       <div className="canvas-chat-feed" ref={scrollRef}>
         {apiConfig?.configured === false && (
           <div className="canvas-api-notice" role="status">
-            <strong>需要配置 WeShop API Key</strong>
-            <p>打开 DSH 设置 → 插件 → weshop2.0，填写 API Key 后即可生成。也可以在启动 Harness 前设置 WESHOP_API_KEY。</p>
+            <strong>{t("需要配置 WeShop API Key")}</strong>
+            <p>{t("打开 DSH 设置 → 插件 → weshop2.0，填写 API Key 后即可生成。也可以在启动 Harness 前设置 WESHOP_API_KEY。")}</p>
           </div>
         )}
         {rows.length === 0 && (
           <div className="canvas-chat-empty">
-            <span>画布与对话已连接</span>
-            <p>在这里描述你想生成或修改的内容，消息会同步到当前 Harness 会话。</p>
+            <span>{t("画布与对话已连接")}</span>
+            <p>{t("在这里描述你想生成或修改的内容，消息会同步到当前 Harness 会话。")}</p>
           </div>
         )}
         {rows.map((row) => (
           <article key={row.key} className={`canvas-chat-message is-${row.role}`}>
-            <span>{row.role === "user" ? "你" : "WeShop"}</span>
+            <span>{row.role === "user" ? t("你") : "WeShop"}</span>
             {row.text && <p>{row.text}</p>}
             {row.tools?.length > 0 && (
-              <small>{row.running ? "正在执行" : "已调用"} · {row.tools.join(" · ")}</small>
+              <small>{t(row.running ? "正在执行" : "已调用")} · {row.tools.join(" · ")}</small>
             )}
-            {row.running && !row.text && row.tools?.length === 0 && <i>正在思考与创作…</i>}
+            {row.running && !row.text && row.tools?.length === 0 && <i>{t("正在思考与创作…")}</i>}
           </article>
         ))}
       </div>
 
       {pendingInteraction?.kind === "question" ? (
-        <CanvasQuestion key={pendingInteraction.key} wait={pendingInteraction} />
+        <CanvasQuestion key={pendingInteraction.key} wait={pendingInteraction} t={t} />
       ) : pendingInteraction?.kind === "approval" ? (
-        <CanvasApproval key={pendingInteraction.key} wait={pendingInteraction} />
+        <CanvasApproval key={pendingInteraction.key} wait={pendingInteraction} t={t} />
       ) : <footer className="canvas-chat-compose">
         {error && <div className="canvas-chat-error">{error}</div>}
-        {mentions.length > 0 && <div className="canvas-chat-mentions" aria-label="画布选区引用">{mentions.map((item) => <span key={item.id} title={`${item.kind} · ${item.mediaType}`}><b>@</b>{item.title}<button type="button" onClick={() => setDismissedMentionIds((current) => [...current, item.id])} aria-label={`移除 ${item.title} 引用`}><X size={10} /></button></span>)}</div>}
+        {mentions.length > 0 && <div className="canvas-chat-mentions" aria-label={t("画布选区引用")}>{mentions.map((item) => <span key={item.id} title={`${item.kind} · ${item.mediaType}`}><b>@</b>{item.title}<button type="button" onClick={() => setDismissedMentionIds((current) => [...current, item.id])} aria-label={`Remove ${item.title}`}><X size={10} /></button></span>)}</div>}
         <div className="canvas-chat-input">
           <textarea
             value={draft}
@@ -297,21 +299,21 @@ export function CanvasChat({ session, sessionTitle, selection = [], onExit }) {
                 void send();
               }
             }}
-            placeholder={mentions.length ? "告诉 WeShop 要如何处理选中的内容…" : "继续和 WeShop 对话…"}
+            placeholder={t(mentions.length ? "告诉 WeShop 要如何处理选中的内容…" : "继续和 WeShop 对话…")}
             rows={2}
             disabled={snapshot?.removed}
           />
           {snapshot?.running ? (
-            <button type="button" className="canvas-chat-stop" onClick={() => void session.cancel()} aria-label="停止生成">
+            <button type="button" className="canvas-chat-stop" onClick={() => void session.cancel()} aria-label={t("停止生成")}>
               <Stop size={14} weight="fill" />
             </button>
           ) : (
-            <button type="button" onClick={() => void send()} disabled={!draft.trim() || sending} aria-label="发送消息">
+            <button type="button" onClick={() => void send()} disabled={!draft.trim() || sending} aria-label={t("发送消息")}>
               <ArrowUp size={16} weight="bold" />
             </button>
           )}
         </div>
-        <small>Enter 发送 · Shift + Enter 换行</small>
+        <small>{t("Enter 发送 · Shift + Enter 换行")}</small>
       </footer>}
     </aside>
   );
