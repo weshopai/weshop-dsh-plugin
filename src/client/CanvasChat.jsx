@@ -198,7 +198,15 @@ export function CanvasChat({ session, sessionTitle, onExit }) {
   const [draft, setDraft] = useState("");
   const [sending, setSending] = useState(false);
   const [error, setError] = useState("");
+  const [apiConfig, setApiConfig] = useState(null);
   const scrollRef = useRef(null);
+
+  useEffect(() => {
+    fetch("/api/weshop/config")
+      .then((response) => response.ok ? response.json() : null)
+      .then(setApiConfig)
+      .catch(() => setApiConfig(null));
+  }, []);
 
   useEffect(() => {
     const element = scrollRef.current;
@@ -235,6 +243,12 @@ export function CanvasChat({ session, sessionTitle, onExit }) {
       </header>
 
       <div className="canvas-chat-feed" ref={scrollRef}>
+        {apiConfig?.configured === false && (
+          <div className="canvas-api-notice" role="status">
+            <strong>需要配置 WeShop API Key</strong>
+            <p>打开 DSH 设置 → 插件 → weshop2.0，填写 API Key 后即可生成。也可以在启动 Harness 前设置 WESHOP_API_KEY。</p>
+          </div>
+        )}
         {rows.length === 0 && (
           <div className="canvas-chat-empty">
             <span>画布与对话已连接</span>

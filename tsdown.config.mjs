@@ -7,6 +7,7 @@ const nodeConfig = {
   format: "esm",
   platform: "node",
   target: "es2022",
+  deps: { alwaysBundle: ["@deepseek-ai/schemastery"] },
   clean: false,
   dts: false,
   sourcemap: false,

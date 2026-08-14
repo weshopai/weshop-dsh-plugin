@@ -22,7 +22,7 @@ const progressFile = process.env.WESHOP_PROGRESS_FILE || path.join(os.tmpdir(), 
 /* ── WeShop OpenAPI (server-side; the key never leaves this process) ───────── */
 
 const WESHOP_BASE_URL = process.env.WESHOP_BASE_URL || "https://openapi.weshop.ai/openapi";
-const WESHOP_API_KEY = process.env.WESHOP_API_KEY || "";
+let configuredApiKey = "";
 const WESHOP_POLL_INTERVAL_MS = Number(process.env.WESHOP_POLL_INTERVAL_MS || 3000);
 const WESHOP_POLL_MAX_MS = Number(process.env.WESHOP_POLL_MAX_MS || 600000);
 
@@ -33,8 +33,9 @@ function weshopError(status, body) {
 }
 
 async function weshopRequest(pathname, { method = "GET", jsonBody, form } = {}) {
-  if (!WESHOP_API_KEY) throw new Error("WESHOP_API_KEY is not set in the Harness environment");
-  const headers = { Authorization: WESHOP_API_KEY }; // raw key, no Bearer prefix
+  const apiKey = configuredApiKey || process.env.WESHOP_API_KEY || "";
+  if (!apiKey) throw new Error("WeShop API Key is not configured. Open Settings → Plugins → weshop2.0, or set WESHOP_API_KEY before starting Harness.");
+  const headers = { Authorization: apiKey }; // raw key, no Bearer prefix
   let body;
   if (form) body = form;
   else if (jsonBody !== undefined) { headers["content-type"] = "application/json"; body = JSON.stringify(jsonBody); }
@@ -299,7 +300,8 @@ const output = {
 };
 
 /** Register every WeShop tool directly on the Cordis tool registry. */
-export function registerNativeTools(ctx) {
+export function registerNativeTools(ctx, options = {}) {
+  configuredApiKey = typeof options.apiKey === "string" ? options.apiKey.trim() : "";
   for (const schema of toolSchemas) {
     ctx.tools.register({
       name: schema.name,

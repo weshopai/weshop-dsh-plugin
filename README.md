@@ -16,6 +16,8 @@ Remote generation URLs are published directly into the canvas. Local asset copyi
 
 Canvas item mutations keep an in-memory undo history. Users can undo from the top bar or with Command/Ctrl+Z; keyboard deletion is disabled while any text-editing control has focus.
 
+The plugin exposes a masked `apiKey` field in DSH's plugin configuration UI. The key stays in the Host process and is never returned to the browser or model. `WESHOP_API_KEY` remains a supported environment fallback; the canvas shows a setup notice when neither source is configured.
+
 ## Build
 
 ```bash

@@ -21,10 +21,14 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import z from "@deepseek-ai/schemastery";
 import { registerNativeTools } from "./native-tools.js";
 
 export const name = "weshop2.0";
 export const inject = ["webServer", "tools", "skills"];
+export const Config = z.object({
+  apiKey: z.string().role("secret"),
+});
 
 const stateFile = process.env.WESHOP_STATE_FILE || path.join(os.tmpdir(), "weshop-2-0-canvas-state.json");
 const actionFile = process.env.WESHOP_ACTIONS_FILE || path.join(os.tmpdir(), "weshop-2-0-canvas-actions.jsonl");
@@ -142,15 +146,21 @@ function readState() {
   catch { return { version: 2, title: "Untitled space", items: [], selectedItemId: null }; }
 }
 
-export function apply(ctx) {
+export function apply(ctx, config = {}) {
   installBundledPreset();
   registerBundledSkills(ctx);
-  registerNativeTools(ctx);
+  registerNativeTools(ctx, { apiKey: config.apiKey });
   ctx.effect(() => ctx.webServer.register({
     kind: "prefix",
     path: "/api/weshop",
     handler: async (request, response) => {
       const pathname = new URL(request.url ?? "/", "http://127.0.0.1").pathname;
+
+      if (pathname === "/api/weshop/config" && request.method === "GET") {
+        const configured = Boolean(config.apiKey || process.env.WESHOP_API_KEY);
+        json(response, 200, { configured, source: config.apiKey ? "plugin" : process.env.WESHOP_API_KEY ? "environment" : null });
+        return;
+      }
 
       if (pathname === "/api/weshop/state" && request.method === "GET") {
         json(response, 200, readState());

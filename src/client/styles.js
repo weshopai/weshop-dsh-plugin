@@ -173,6 +173,9 @@ const CSS = `
 .canvas-chat-head button { width: 32px; height: 32px; flex: none; display: grid; place-items: center; padding: 0; border: 0; border-radius: 9px; color: #676862; background: #efefe9; cursor: pointer; }
 .canvas-chat-head button:hover { color: #242522; background: #e5e6df; }
 .canvas-chat-feed { overflow: auto; padding: 22px 18px 28px; scroll-behavior: smooth; }
+.canvas-api-notice { margin: 0 0 18px; padding: 12px 13px; border: 1px solid #decf9f; border-radius: 11px; color: #51482d; background: #fff9e8; }
+.canvas-api-notice strong { font: 650 11px "Manrope", system-ui, sans-serif; }
+.canvas-api-notice p { margin: 5px 0 0; color: #786d4d; font-size: 9px; line-height: 1.55; }
 .canvas-chat-empty { min-height: 54vh; display: grid; place-content: center; justify-items: center; gap: 8px; color: #8b8c86; text-align: center; }
 .canvas-chat-empty span { color: #37423c; font: 650 13px "Manrope", system-ui, sans-serif; }
 .canvas-chat-empty p { max-width: 270px; margin: 0; font-size: 11px; line-height: 1.65; }
