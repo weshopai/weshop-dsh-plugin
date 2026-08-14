@@ -48,6 +48,21 @@ function WeshopOpenAction({ onOpen, sessions, presetFor }) {
   );
 }
 
+function ModeHint({ enabled }) {
+  const zh = initialLocale === "zh";
+  return (
+    <div className="weshop-mode-hint" role="status" aria-live="polite">
+      <span className={`weshop-mode-hint-icon${enabled ? " is-active" : ""}`}>
+        <SquaresFour size={15} weight="fill" />
+      </span>
+      <span>
+        <strong>{enabled ? (zh ? "WeShop 画布已启用" : "WeShop canvas enabled") : (zh ? "已切回标准模式" : "Standard mode restored")}</strong>
+        <small>{enabled ? (zh ? "点击左下角画布按钮即可随时打开" : "Use the canvas button at the lower left to open it anytime") : (zh ? "画布入口已收起" : "The canvas shortcut is now hidden")}</small>
+      </span>
+    </div>
+  );
+}
+
 /** The agent preset id whose sessions get the conversation + canvas split. */
 const WESHOP_PRESET = "weshop-canvas";
 
@@ -64,6 +79,8 @@ export function apply(ctx) {
   let weshopActive = false;
   let panelSessionId = null;
   let actionCursor = Date.now();
+  let disposeModeHint = null;
+  let modeHintTimer = null;
   // Running/status updates can briefly replace a session summary without its
   // preset. Retain the last host-confirmed preset per session so the canvas
   // action does not flicker out halfway through a turn. Explicit preset-change
@@ -75,6 +92,19 @@ export function apply(ctx) {
     const listed = state.byId[sessionId]?.agentPreset;
     if (listed !== undefined) presetBySession.set(sessionId, listed);
     return listed ?? presetBySession.get(sessionId);
+  };
+  const showModeHint = (enabled) => {
+    if (modeHintTimer !== null) window.clearTimeout(modeHintTimer);
+    if (disposeModeHint !== null) disposeModeHint();
+    disposeModeHint = ctx.slots.register(
+      { name: "shell.overlay", id: "weshop-mode-hint", order: 90 },
+      () => <ModeHint enabled={enabled} />,
+    );
+    modeHintTimer = window.setTimeout(() => {
+      if (disposeModeHint !== null) disposeModeHint();
+      disposeModeHint = null;
+      modeHintTimer = null;
+    }, 3200);
   };
 
   const openPanel = (initialActionCursor = Date.now()) => {
@@ -139,8 +169,12 @@ export function apply(ctx) {
 
   const unsubscribe = ctx.sessions.list.subscribe(sync);
   const presetSelected = ctx.remote.$on("agent-preset/selected", (sessionId, agentPreset) => {
+    const previous = presetBySession.get(sessionId);
     presetBySession.set(sessionId, agentPreset);
     sync();
+    if (ctx.sessions.list.getSnapshot().current === sessionId && previous !== agentPreset) {
+      showModeHint(agentPreset === WESHOP_PRESET);
+    }
   });
   sync();
 
@@ -167,6 +201,8 @@ export function apply(ctx) {
     unsubscribe();
     presetSelected();
     window.clearInterval(actionTimer);
+    if (modeHintTimer !== null) window.clearTimeout(modeHintTimer);
+    if (disposeModeHint !== null) disposeModeHint();
     if (disposePanel !== null) disposePanel();
     if (disposeAction !== null) disposeAction();
   };

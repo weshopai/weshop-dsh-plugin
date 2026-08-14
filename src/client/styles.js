@@ -145,6 +145,13 @@ const CSS = `
 .toast { position: fixed; z-index: 100; left: 50%; bottom: 22px; transform: translateX(-50%); min-width: 310px; display: grid; grid-template-columns: 12px 1fr; align-items: center; column-gap: 7px; padding: 12px 15px; border: 1px solid rgba(255,255,255,.12); border-radius: 12px; color: white; background: rgba(31,35,32,.94); box-shadow: 0 12px 35px rgba(20,22,19,.22); font-size: 11px; backdrop-filter: blur(16px); }
 .toast small { grid-column: 2; margin-top: 2px; color: #aeb7b1; font-size: 9px; }
 .toast-dot { width: 7px; height: 7px; border-radius: 50%; background: #75c99c; box-shadow: 0 0 0 4px rgba(117,201,156,.12); }
+.weshop-mode-hint { position: fixed; z-index: 1700; left: 18px; bottom: 18px; display: flex; align-items: center; gap: 10px; max-width: min(360px, calc(100vw - 36px)); padding: 10px 13px 10px 10px; border: 1px solid rgba(28,32,29,.09); border-radius: 14px; color: #292d29; background: rgba(250,251,248,.94); box-shadow: 0 12px 38px rgba(24,28,24,.14), 0 2px 8px rgba(24,28,24,.06); backdrop-filter: blur(18px) saturate(1.15); pointer-events: none; animation: weshop-mode-hint-in .24s cubic-bezier(.2,.8,.2,1); }
+.weshop-mode-hint > span:last-child { display: grid; gap: 2px; min-width: 0; }
+.weshop-mode-hint strong { font-size: 12px; font-weight: 650; letter-spacing: -.01em; }
+.weshop-mode-hint small { color: #737a73; font-size: 10px; line-height: 1.35; }
+.weshop-mode-hint-icon { display: grid; flex: 0 0 auto; width: 30px; height: 30px; place-items: center; border-radius: 9px; color: #737a73; background: #eceee9; }
+.weshop-mode-hint-icon.is-active { color: #fff; background: #252a26; box-shadow: 0 5px 14px rgba(37,42,38,.2); }
+@keyframes weshop-mode-hint-in { from { opacity: 0; transform: translateY(8px) scale(.98); } to { opacity: 1; transform: translateY(0) scale(1); } }
 
 .agent-progress { position: fixed; z-index: 55; right: 18px; top: 82px; width: 292px; padding: 13px 14px; border: 1px solid rgba(35,45,39,.12); border-radius: 14px; color: #29302c; background: rgba(252,252,248,.95); box-shadow: 0 14px 42px rgba(27,34,29,.12); backdrop-filter: blur(18px); animation: menu-in .18s ease-out; }
 .progress-head { display: grid; grid-template-columns: 9px 1fr auto; align-items: center; gap: 7px; }
