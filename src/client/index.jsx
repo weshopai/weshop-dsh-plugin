@@ -28,14 +28,13 @@ function SplitPanel({ onExit, initialActionCursor, session, sessionTitle }) {
 }
 
 /** Sidebar-footer action to reopen the canvas after it was closed. */
-function WeshopOpenAction({ onOpen, sessions }) {
+function WeshopOpenAction({ onOpen, sessions, presetFor }) {
   const state = useSyncExternalStore(
     (listener) => sessions.list.subscribe(listener),
     () => sessions.list.getSnapshot(),
     () => sessions.list.getSnapshot(),
   );
-  const current = state.current === undefined ? undefined : state.byId[state.current];
-  if (current?.agentPreset !== WESHOP_PRESET) return null;
+  if (presetFor(state) !== WESHOP_PRESET) return null;
   return (
     <button
       type="button"
@@ -52,7 +51,7 @@ function WeshopOpenAction({ onOpen, sessions }) {
 /** The agent preset id whose sessions get the conversation + canvas split. */
 const WESHOP_PRESET = "weshop-canvas";
 
-export const inject = ["slots", "sessions", "layout"];
+export const inject = ["slots", "sessions", "layout", "remote"];
 
 export function apply(ctx) {
   injectWeshopStyles();
@@ -65,20 +64,31 @@ export function apply(ctx) {
   let weshopActive = false;
   let panelSessionId = null;
   let actionCursor = Date.now();
+  // Running/status updates can briefly replace a session summary without its
+  // preset. Retain the last host-confirmed preset per session so the canvas
+  // action does not flicker out halfway through a turn. Explicit preset-change
+  // events below update this cache immediately, so switching back to Standard
+  // still removes the action without waiting for a list refresh.
+  const presetBySession = new Map();
+  const presetFor = (state, sessionId = state.current) => {
+    if (sessionId === undefined) return undefined;
+    const listed = state.byId[sessionId]?.agentPreset;
+    if (listed !== undefined) presetBySession.set(sessionId, listed);
+    return listed ?? presetBySession.get(sessionId);
+  };
 
   const openPanel = (initialActionCursor = Date.now()) => {
     if (disposePanel !== null) return;
     const state = ctx.sessions.list.getSnapshot();
     const sessionId = state.current;
-    const current = sessionId === undefined ? undefined : state.byId[sessionId];
     const binding = sessionId === undefined ? undefined : ctx.sessions.binding(sessionId);
-    if (sessionId === undefined || binding === undefined || current?.agentPreset !== WESHOP_PRESET) return;
+    if (sessionId === undefined || binding === undefined || presetFor(state, sessionId) !== WESHOP_PRESET) return;
     panelSessionId = sessionId;
     disposePanel = ctx.slots.register(
       { name: "shell.overlay", id: "weshop-canvas-right-panel", order: 10 },
       () => {
         const latest = ctx.sessions.list.getSnapshot();
-        if (latest.current !== sessionId || latest.byId[sessionId]?.agentPreset !== WESHOP_PRESET) return null;
+        if (latest.current !== sessionId || presetFor(latest, sessionId) !== WESHOP_PRESET) return null;
         return <SplitPanel
           initialActionCursor={initialActionCursor}
           session={binding.session}
@@ -97,8 +107,7 @@ export function apply(ctx) {
 
   const sync = () => {
     const state = ctx.sessions.list.getSnapshot();
-    const current = state.current === undefined ? undefined : state.byId[state.current];
-    const weshop = current !== undefined && current.agentPreset === WESHOP_PRESET;
+    const weshop = presetFor(state) === WESHOP_PRESET;
     const sessionChanged = panelSessionId !== null && panelSessionId !== state.current;
     const reopenForSession = sessionChanged && disposePanel !== null;
     weshopActive = weshop;
@@ -111,7 +120,7 @@ export function apply(ctx) {
       if (disposeAction === null) {
         disposeAction = ctx.slots.register(
           { name: "sidebar.footer.action", id: "weshop-canvas-open", order: 10 },
-          () => <WeshopOpenAction onOpen={openPanel} sessions={ctx.sessions} />,
+          () => <WeshopOpenAction onOpen={openPanel} sessions={ctx.sessions} presetFor={presetFor} />,
         );
       }
       if (reopenForSession) openPanel();
@@ -129,6 +138,10 @@ export function apply(ctx) {
   };
 
   const unsubscribe = ctx.sessions.list.subscribe(sync);
+  const presetSelected = ctx.remote.$on("agent-preset/selected", (sessionId, agentPreset) => {
+    presetBySession.set(sessionId, agentPreset);
+    sync();
+  });
   sync();
 
   const watchPublishedResults = async () => {
@@ -152,6 +165,7 @@ export function apply(ctx) {
 
   return () => {
     unsubscribe();
+    presetSelected();
     window.clearInterval(actionTimer);
     if (disposePanel !== null) disposePanel();
     if (disposeAction !== null) disposeAction();

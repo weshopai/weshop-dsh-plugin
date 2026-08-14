@@ -45,12 +45,12 @@ pnpm build
 pnpm pack
 ```
 
-This creates a versioned file such as `weshop-dsh-weshop-2-0-0.1.15.tgz`.
+This creates a versioned file such as `weshop-dsh-weshop-2-0-0.1.16.tgz`.
 
 ### 2. Install it into the Harness Web profile
 
 ```bash
-PLUGIN_TARBALL="/absolute/path/to/weshop-dsh-weshop-2-0-0.1.15.tgz"
+PLUGIN_TARBALL="/absolute/path/to/weshop-dsh-weshop-2-0-0.1.16.tgz"
 cd ~/.dsh/profiles/web
 pnpm add "$PLUGIN_TARBALL"
 ```
