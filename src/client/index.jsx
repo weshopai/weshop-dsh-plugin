@@ -48,16 +48,27 @@ function WeshopOpenAction({ onOpen, sessions, presetFor }) {
   );
 }
 
-function ModeHint({ enabled }) {
+function ModeHint({ kind }) {
   const zh = initialLocale === "zh";
+  const enabled = kind !== "disabled";
+  const title = kind === "started"
+    ? (zh ? "画布已经准备好了" : "Your canvas is ready")
+    : enabled
+      ? (zh ? "WeShop 画布已启用" : "WeShop canvas enabled")
+      : (zh ? "已切回标准模式" : "Standard mode restored");
+  const description = kind === "started"
+    ? (zh ? "创作已开始，点击左下角画布按钮即可边聊边查看" : "Creation has started. Open the canvas from the lower-left button while you chat")
+    : enabled
+      ? (zh ? "点击左下角画布按钮即可随时打开" : "Use the canvas button at the lower left to open it anytime")
+      : (zh ? "画布入口已收起" : "The canvas shortcut is now hidden");
   return (
     <div className="weshop-mode-hint" role="status" aria-live="polite">
       <span className={`weshop-mode-hint-icon${enabled ? " is-active" : ""}`}>
         <SquaresFour size={15} weight="fill" />
       </span>
       <span>
-        <strong>{enabled ? (zh ? "WeShop 画布已启用" : "WeShop canvas enabled") : (zh ? "已切回标准模式" : "Standard mode restored")}</strong>
-        <small>{enabled ? (zh ? "点击左下角画布按钮即可随时打开" : "Use the canvas button at the lower left to open it anytime") : (zh ? "画布入口已收起" : "The canvas shortcut is now hidden")}</small>
+        <strong>{title}</strong>
+        <small>{description}</small>
       </span>
     </div>
   );
@@ -81,6 +92,7 @@ export function apply(ctx) {
   let actionCursor = Date.now();
   let disposeModeHint = null;
   let modeHintTimer = null;
+  const blankBySession = new Map();
   // Running/status updates can briefly replace a session summary without its
   // preset. Retain the last host-confirmed preset per session so the canvas
   // action does not flicker out halfway through a turn. Explicit preset-change
@@ -93,12 +105,12 @@ export function apply(ctx) {
     if (listed !== undefined) presetBySession.set(sessionId, listed);
     return listed ?? presetBySession.get(sessionId);
   };
-  const showModeHint = (enabled) => {
+  const showModeHint = (kind) => {
     if (modeHintTimer !== null) window.clearTimeout(modeHintTimer);
     if (disposeModeHint !== null) disposeModeHint();
     disposeModeHint = ctx.slots.register(
       { name: "shell.overlay", id: "weshop-mode-hint", order: 90 },
-      () => <ModeHint enabled={enabled} />,
+      () => <ModeHint kind={kind} />,
     );
     modeHintTimer = window.setTimeout(() => {
       if (disposeModeHint !== null) disposeModeHint();
@@ -138,6 +150,13 @@ export function apply(ctx) {
   const sync = () => {
     const state = ctx.sessions.list.getSnapshot();
     const weshop = presetFor(state) === WESHOP_PRESET;
+    const currentId = state.current;
+    const currentBlank = currentId === undefined ? undefined : state.byId[currentId]?.blank;
+    if (currentId !== undefined && currentBlank !== undefined) {
+      const previousBlank = blankBySession.get(currentId);
+      blankBySession.set(currentId, currentBlank);
+      if (weshop && previousBlank === true && currentBlank === false) showModeHint("started");
+    }
     const sessionChanged = panelSessionId !== null && panelSessionId !== state.current;
     const reopenForSession = sessionChanged && disposePanel !== null;
     weshopActive = weshop;
@@ -173,7 +192,7 @@ export function apply(ctx) {
     presetBySession.set(sessionId, agentPreset);
     sync();
     if (ctx.sessions.list.getSnapshot().current === sessionId && previous !== agentPreset) {
-      showModeHint(agentPreset === WESHOP_PRESET);
+      showModeHint(agentPreset === WESHOP_PRESET ? "enabled" : "disabled");
     }
   });
   sync();
