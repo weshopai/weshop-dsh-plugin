@@ -1,9 +1,17 @@
 import { SquaresFour } from "@phosphor-icons/react";
-import { useState, useSyncExternalStore } from "react";
+import { useEffect, useState, useSyncExternalStore } from "react";
 import { injectWeshopStyles } from "./styles.js";
 import { WeshopWorkspace } from "./CanvasWorkspace.jsx";
 import { CanvasChat } from "./CanvasChat.jsx";
-import { initialLocale, saveLocale } from "./i18n.js";
+
+function useHarnessLocale(locale) {
+  const snapshot = useSyncExternalStore(
+    (listener) => locale.subscribe(listener),
+    () => locale.getSnapshot(),
+    () => locale.getSnapshot(),
+  );
+  return /^zh\b/i.test(snapshot.active) ? "zh-CN" : "en";
+}
 
 /**
  * Result canvas panel for the weshop-canvas agent mode. Registered into
@@ -13,10 +21,10 @@ import { initialLocale, saveLocale } from "./i18n.js";
  * AppFrame auto-closes `details` on session switch and only renders it for
  * non-blank sessions, both of which fight a persistent canvas split.
  */
-function SplitPanel({ onExit, initialActionCursor, session, sessionTitle }) {
+function SplitPanel({ onExit, initialActionCursor, session, sessionTitle, harnessLocale }) {
   const [selection, setSelection] = useState([]);
-  const [locale, setLocaleState] = useState(initialLocale);
-  const setLocale = (next) => { saveLocale(next); setLocaleState(next); };
+  const locale = useHarnessLocale(harnessLocale);
+  const setLocale = (next) => harnessLocale.setLocale(next === "zh-CN" ? "zh" : "en");
   return (
     <div className="weshop-root weshop-split weshop-studio" style={{ position: "fixed", inset: 0, zIndex: 1500, pointerEvents: "auto", overflow: "hidden" }}>
       <main className="weshop-canvas-pane">
@@ -39,37 +47,54 @@ function WeshopOpenAction({ onOpen, sessions, presetFor }) {
     <button
       type="button"
       onClick={() => onOpen()}
+      data-weshop-canvas-trigger
       title="Open WeShop canvas"
       aria-label="Open WeShop canvas"
-      style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: 30, height: 30, border: 0, borderRadius: 8, color: "var(--dsw-fg-2, #4a4c47)", background: "transparent", cursor: "pointer" }}
+      style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: 42, height: 42, border: 0, borderRadius: 12, color: "#fff", background: "#242723", boxShadow: "0 6px 16px rgba(23, 28, 24, .18)", cursor: "pointer" }}
     >
-      <SquaresFour size={15} weight="fill" />
+      <SquaresFour size={21} weight="fill" />
     </button>
   );
 }
 
-function ModeHint({ kind }) {
-  const zh = initialLocale === "zh";
-  const enabled = kind !== "disabled";
-  const title = kind === "started"
-    ? (zh ? "画布已经准备好了" : "Your canvas is ready")
-    : enabled
-      ? (zh ? "WeShop 画布已启用" : "WeShop canvas enabled")
-      : (zh ? "已切回标准模式" : "Standard mode restored");
-  const description = kind === "started"
-    ? (zh ? "创作已开始，点击左下角画布按钮即可边聊边查看" : "Creation has started. Open the canvas from the lower-left button while you chat")
-    : enabled
-      ? (zh ? "点击左下角画布按钮即可随时打开" : "Use the canvas button at the lower left to open it anytime")
-      : (zh ? "画布入口已收起" : "The canvas shortcut is now hidden");
+function CanvasOnboarding({ locale, onDismiss, onTimeout }) {
+  const [targetRect, setTargetRect] = useState(null);
+  useEffect(() => {
+    const updateTarget = () => {
+      const target = document.querySelector("[data-weshop-canvas-trigger]");
+      if (!target) return;
+      const rect = target.getBoundingClientRect();
+      setTargetRect({ left: rect.left, top: rect.top, width: rect.width, height: rect.height });
+    };
+    const frame = window.requestAnimationFrame(updateTarget);
+    window.addEventListener("resize", updateTarget);
+    return () => {
+      window.cancelAnimationFrame(frame);
+      window.removeEventListener("resize", updateTarget);
+    };
+  }, []);
+  useEffect(() => {
+    const timeout = window.setTimeout(onTimeout, 5200);
+    return () => window.clearTimeout(timeout);
+  }, [onTimeout]);
+  const ringStyle = targetRect ? {
+    left: targetRect.left - 10,
+    top: targetRect.top - 10,
+    width: targetRect.width + 20,
+    height: targetRect.height + 20,
+  } : { opacity: 0 };
+  const copyStyle = targetRect ? { left: Math.min(targetRect.left + targetRect.width + 18, window.innerWidth - 272), bottom: Math.max(18, window.innerHeight - targetRect.top + 12) } : { opacity: 0 };
+  const zh = useHarnessLocale(locale) === "zh-CN";
   return (
-    <div className="weshop-mode-hint" role="status" aria-live="polite">
-      <span className={`weshop-mode-hint-icon${enabled ? " is-active" : ""}`}>
-        <SquaresFour size={15} weight="fill" />
-      </span>
-      <span>
-        <strong>{title}</strong>
-        <small>{description}</small>
-      </span>
+    <div className="weshop-root weshop-canvas-onboarding" aria-live="polite">
+      <div className="weshop-onboarding-veil" />
+      <div className="weshop-onboarding-ring" style={ringStyle}><SquaresFour size={22} weight="fill" /></div>
+      <section className="weshop-onboarding-copy" style={copyStyle}>
+        <span>{zh ? "WESHOP 画布" : "WESHOP CANVAS"}</span>
+        <strong>{zh ? "从这里打开画布" : "Open your canvas here"}</strong>
+        <p>{zh ? "点击即可边聊边看。" : "Click to create and chat side by side."}</p>
+        <button type="button" onClick={onDismiss}>{zh ? "我知道了" : "Got it"}</button>
+      </section>
     </div>
   );
 }
@@ -77,7 +102,7 @@ function ModeHint({ kind }) {
 /** The agent preset id whose sessions get the conversation + canvas split. */
 const WESHOP_PRESET = "weshop-canvas";
 
-export const inject = ["slots", "sessions", "layout", "remote"];
+export const inject = ["slots", "sessions", "layout", "remote", "locale"];
 
 export function apply(ctx) {
   injectWeshopStyles();
@@ -90,11 +115,9 @@ export function apply(ctx) {
   let weshopActive = false;
   let panelSessionId = null;
   let actionCursor = Date.now();
-  let disposeModeHint = null;
-  let modeHintTimer = null;
+  let disposeCanvasOnboarding = null;
   let resultOpenTimer = null;
   let pendingResultCursor = null;
-  const blankBySession = new Map();
   // Running/status updates can briefly replace a session summary without its
   // preset. Retain the last host-confirmed preset per session so the canvas
   // action does not flicker out halfway through a turn. Explicit preset-change
@@ -107,18 +130,16 @@ export function apply(ctx) {
     if (listed !== undefined) presetBySession.set(sessionId, listed);
     return listed ?? presetBySession.get(sessionId);
   };
-  const showModeHint = (kind) => {
-    if (modeHintTimer !== null) window.clearTimeout(modeHintTimer);
-    if (disposeModeHint !== null) disposeModeHint();
-    disposeModeHint = ctx.slots.register(
-      { name: "shell.overlay", id: "weshop-mode-hint", order: 90 },
-      () => <ModeHint kind={kind} />,
+  const hideCanvasOnboarding = () => {
+    if (disposeCanvasOnboarding !== null) disposeCanvasOnboarding();
+    disposeCanvasOnboarding = null;
+  };
+  const showCanvasOnboarding = () => {
+    if (disposeCanvasOnboarding !== null) return;
+    disposeCanvasOnboarding = ctx.slots.register(
+      { name: "shell.overlay", id: "weshop-canvas-onboarding", order: 95 },
+      () => <CanvasOnboarding locale={ctx.locale} onDismiss={hideCanvasOnboarding} onTimeout={hideCanvasOnboarding} />,
     );
-    modeHintTimer = window.setTimeout(() => {
-      if (disposeModeHint !== null) disposeModeHint();
-      disposeModeHint = null;
-      modeHintTimer = null;
-    }, 3200);
   };
 
   const openPanel = (initialActionCursor = Date.now()) => {
@@ -127,6 +148,7 @@ export function apply(ctx) {
     const sessionId = state.current;
     const binding = sessionId === undefined ? undefined : ctx.sessions.binding(sessionId);
     if (sessionId === undefined || binding === undefined || presetFor(state, sessionId) !== WESHOP_PRESET) return;
+    hideCanvasOnboarding();
     panelSessionId = sessionId;
     disposePanel = ctx.slots.register(
       { name: "shell.overlay", id: "weshop-canvas-right-panel", order: 10 },
@@ -137,6 +159,7 @@ export function apply(ctx) {
           initialActionCursor={initialActionCursor}
           session={binding.session}
           sessionTitle={state.byId[sessionId]?.title}
+          harnessLocale={ctx.locale}
           onExit={() => {
             if (disposePanel !== null) {
               disposePanel();
@@ -152,13 +175,6 @@ export function apply(ctx) {
   const sync = () => {
     const state = ctx.sessions.list.getSnapshot();
     const weshop = presetFor(state) === WESHOP_PRESET;
-    const currentId = state.current;
-    const currentBlank = currentId === undefined ? undefined : state.byId[currentId]?.blank;
-    if (currentId !== undefined && currentBlank !== undefined) {
-      const previousBlank = blankBySession.get(currentId);
-      blankBySession.set(currentId, currentBlank);
-      if (weshop && previousBlank === true && currentBlank === false) showModeHint("started");
-    }
     const sessionChanged = panelSessionId !== null && panelSessionId !== state.current;
     const reopenForSession = sessionChanged && disposePanel !== null;
     weshopActive = weshop;
@@ -194,7 +210,7 @@ export function apply(ctx) {
     presetBySession.set(sessionId, agentPreset);
     sync();
     if (ctx.sessions.list.getSnapshot().current === sessionId && previous !== agentPreset) {
-      showModeHint(agentPreset === WESHOP_PRESET ? "enabled" : "disabled");
+      if (agentPreset === WESHOP_PRESET) window.setTimeout(showCanvasOnboarding, 0);
     }
   });
   sync();
@@ -229,9 +245,8 @@ export function apply(ctx) {
     unsubscribe();
     presetSelected();
     window.clearInterval(actionTimer);
-    if (modeHintTimer !== null) window.clearTimeout(modeHintTimer);
     if (resultOpenTimer !== null) window.clearTimeout(resultOpenTimer);
-    if (disposeModeHint !== null) disposeModeHint();
+    if (disposeCanvasOnboarding !== null) disposeCanvasOnboarding();
     if (disposePanel !== null) disposePanel();
     if (disposeAction !== null) disposeAction();
   };
