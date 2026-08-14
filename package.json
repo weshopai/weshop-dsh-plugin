@@ -1,6 +1,6 @@
 {
   "name": "weshop-dsh-plugin",
-  "version": "0.1.1",
+  "version": "1.0.1",
   "private": false,
   "description": "Native Cordis WeShop canvas, tools, skills, and Web UI for DeepSeek Harness",
   "license": "MIT",

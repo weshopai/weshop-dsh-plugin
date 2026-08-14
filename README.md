@@ -5,7 +5,7 @@
 **An AI visual workspace for e-commerce creation, built into DeepSeek Harness.**
 
 [![License](https://img.shields.io/badge/license-MIT-2ea44f.svg)](./LICENSE)
-[![Version](https://img.shields.io/badge/version-0.1.1-282828.svg)]()
+[![Version](https://img.shields.io/badge/version-1.0.1-282828.svg)]()
 [![Platform](https://img.shields.io/badge/platform-DeepSeek%20Harness%20plugin-282828.svg)]()
 [![简体中文](https://img.shields.io/badge/Language-%E7%AE%80%E4%BD%93%E4%B8%AD%E6%96%87-7530FE.svg)](./README.zh-CN.md)
 
@@ -117,12 +117,12 @@ pnpm build
 pnpm pack
 ```
 
-This creates a versioned file such as `weshop-dsh-plugin-0.1.1.tgz`.
+This creates a versioned file such as `weshop-dsh-plugin-1.0.1.tgz`.
 
 Install it into the Harness Web profile:
 
 ```bash
-PLUGIN_TARBALL="/absolute/path/to/weshop-dsh-plugin-0.1.1.tgz"
+PLUGIN_TARBALL="/absolute/path/to/weshop-dsh-plugin-1.0.1.tgz"
 cd ~/.dsh/profiles/web
 pnpm add "$PLUGIN_TARBALL"
 ```
