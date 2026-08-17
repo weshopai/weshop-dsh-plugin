@@ -45,6 +45,11 @@ It is built for workflows like:
 - **🌐 Bilingual interface**: Chinese and English, with automatic locale detection and manual switching.
 - **📦 Portable install**: Packages as a single `.tgz` for installation on any machine running Harness.
 
+## 🧩 DSH ecosystem
+
+- **Works alongside dsh-web-ui**: The canvas overlay and sidebar entry follow the host UI conventions used by [dsh-web-ui](https://github.com/zhu1090093659/dsh-web-ui), including its skins, so WeShop stays accessible without competing with the surrounding interface.
+- **Available in dsh-market**: Install [dsh-market](https://github.com/dsh-market/dsh-market) to browse and install WeShop from **Settings → Plugin Market** alongside other DeepSeek Harness plugins.
+
 ## 💡 Why WeShop?
 
 | Pain Point (Traditional) | The WeShop Workspace |
@@ -85,6 +90,16 @@ npx @deepseek-ai/dsh web
 ```
 
 Create or open a task, then choose the **WeShop Canvas** preset. The preset is installed automatically on first activation.
+
+### Install through dsh-market
+
+If you use the community plugin market, install it once and restart Harness:
+
+```bash
+dsh plugin --profile web add dshmarket
+```
+
+Then open **Settings → Plugin Market**, search for **WeShop**, and install it there.
 
 ### Update WeShop
 

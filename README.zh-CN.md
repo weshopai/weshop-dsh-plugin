@@ -46,6 +46,11 @@ WeShop for DeepSeek Harness 把 WeShop 的电商视觉工作台直接接入 [Dee
 - **🌐 中英双语界面**：自动识别系统语言，同时支持手动切换。
 - **📦 可迁移安装**：打包为单个 `.tgz`，可安装到任意已运行 Harness 的电脑。
 
+## 🧩 DSH 生态兼容
+
+- **兼容 dsh-web-ui**：画布浮层和侧边栏入口遵循 [dsh-web-ui](https://github.com/zhu1090093659/dsh-web-ui) 使用的宿主界面规范，并适配其皮肤，确保 WeShop 与周边界面协调且随时可打开。
+- **已上架 dsh-market**：安装 [dsh-market](https://github.com/dsh-market/dsh-market) 后，可在 **设置 → Plugin Market** 中浏览并安装 WeShop 与其他 DeepSeek Harness 插件。
+
 ## 💡 为什么选择 WeShop？
 
 | 痛点（传统模式） | WeShop 工作台 |
@@ -86,6 +91,16 @@ npx @deepseek-ai/dsh web
 ```
 
 新建或打开一个任务，选择 **WeShop 画布模式** Preset。首次启用时会自动安装该 Preset。
+
+### 通过 dsh-market 安装
+
+如果使用社区插件市场，先安装市场插件并重启 Harness：
+
+```bash
+dsh plugin --profile web add dshmarket
+```
+
+然后打开 **设置 → Plugin Market**，搜索 **WeShop** 并安装。
 
 ### 更新 WeShop
 
