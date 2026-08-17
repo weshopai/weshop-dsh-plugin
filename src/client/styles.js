@@ -9,6 +9,16 @@ const CSS = `
 .weshop-root button, .weshop-root input { font: inherit; }
 .weshop-root button { color: inherit; }
 
+/* Sidebar-footer trigger: NOT under .weshop-root (the host renders it straight into
+   its own sidebar footer row, beside the native update/remote-control icons), so it
+   must match those buttons' own convention (36px transparent circle, host design
+   tokens) instead of carrying its own fixed-box look — a solid dark square there
+   reads as a rendering glitch next to plain icon buttons. */
+.weshop-footer-trigger { display: inline-flex; align-items: center; justify-content: center; flex: none; width: 36px; height: 36px; padding: 0; border: 0; border-radius: 50%; background: transparent; color: var(--dsw-alias-label-secondary, #6b6d68); cursor: pointer; transition: background-color 120ms ease, color 120ms ease, box-shadow 120ms ease; }
+.weshop-footer-trigger:hover { background: var(--dsw-alias-interactive-bg-hover, rgba(0,0,0,.06)); color: var(--dsw-alias-label-primary, #222322); }
+.weshop-footer-trigger:active { background: var(--dsw-alias-interactive-bg-active, rgba(0,0,0,.1)); }
+.weshop-footer-trigger:focus-visible { outline: none; box-shadow: 0 0 0 2px var(--dsw-alias-bg-layer-2, #fff), 0 0 0 4px var(--dsw-alias-brand-primary, #244d3e); }
+
 .pure-canvas-shell { position: relative; width: 100%; height: 100%; background: #f7f7f4; }
 .topbar { position: absolute; z-index: 70; inset: 0 0 auto; height: 68px; display: flex; flex-direction: row; align-items: center; gap: 11px; padding: 0 18px; background: rgba(250,250,247,.9); border-bottom: 1px solid rgba(31,32,30,.08); backdrop-filter: blur(18px); }
 .brand-mark { width: 30px; height: 30px; display: grid; place-items: center; flex: none; border-radius: 50%; color: white; background: #20211f; }

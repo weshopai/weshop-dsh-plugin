@@ -57,9 +57,9 @@ function WeshopOpenAction({ onOpen, sessions, presetFor }) {
       data-weshop-canvas-trigger
       title="Open WeShop canvas"
       aria-label="Open WeShop canvas"
-      style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: 42, height: 42, border: 0, borderRadius: 12, color: "#fff", background: "#242723", boxShadow: "0 6px 16px rgba(23, 28, 24, .18)", cursor: "pointer" }}
+      className="weshop-footer-trigger"
     >
-      <SquaresFour size={21} weight="fill" />
+      <SquaresFour size={20} weight="fill" />
     </button>
   );
 }
