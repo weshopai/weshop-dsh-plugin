@@ -1,5 +1,6 @@
 import { SquaresFour } from "@phosphor-icons/react";
 import { useEffect, useState, useSyncExternalStore } from "react";
+import { createPortal } from "react-dom";
 import { injectWeshopStyles } from "./styles.js";
 import { WeshopWorkspace } from "./CanvasWorkspace.jsx";
 import { CanvasChat } from "./CanvasChat.jsx";
@@ -25,16 +26,19 @@ function SplitPanel({ onExit, initialActionCursor, session, sessionTitle, harnes
   const [selection, setSelection] = useState([]);
   const locale = useHarnessLocale(harnessLocale);
   const setLocale = (next) => harnessLocale.setLocale(next === "zh-CN" ? "zh" : "en");
-  return (
-    // z-index above 1_000_000: dsh-web-ui's retro-OS skins (xp/ths/qq98/trading/miku) pin an
-    // interactive title/status bar to the viewport edges at that z-index; without this the
-    // canvas's own top bar and exit control would render underneath them.
+  // Rendered via a body-level portal, not in place: the host mounts `shell.overlay`
+  // registrations inside its own AppFrame `.overlayLayer` (position:absolute, z-index:20),
+  // which caps every z-index set here regardless of value. dsh-web-ui's retro-OS skins
+  // (xp/ths/qq98/trading/miku) append their title/status bar straight to <body> at
+  // z-index 1_000_000, so without the portal they always paint over this canvas.
+  return createPortal(
     <div className="weshop-root weshop-split weshop-studio" style={{ position: "fixed", inset: 0, zIndex: 1000001, pointerEvents: "auto", overflow: "hidden" }}>
       <main className="weshop-canvas-pane">
         <WeshopWorkspace onExit={onExit} onSelectionChange={setSelection} locale={locale} onLocaleChange={setLocale} embedded initialActionCursor={initialActionCursor} />
       </main>
       <CanvasChat session={session} sessionTitle={sessionTitle} selection={selection} locale={locale} onExit={onExit} />
-    </div>
+    </div>,
+    document.body,
   );
 }
 
@@ -88,7 +92,9 @@ function CanvasOnboarding({ locale, onDismiss, onTimeout }) {
   } : { opacity: 0 };
   const copyStyle = targetRect ? { left: Math.min(targetRect.left + targetRect.width + 18, window.innerWidth - 272), bottom: Math.max(18, window.innerHeight - targetRect.top + 12) } : { opacity: 0 };
   const zh = useHarnessLocale(locale) === "zh-CN";
-  return (
+  // Same overlayLayer-escape reasoning as SplitPanel above — portal to <body> so this
+  // still floats above body-level chrome like the retro-skin title/status bars.
+  return createPortal(
     <div className="weshop-root weshop-canvas-onboarding" aria-live="polite">
       <div className="weshop-onboarding-veil" />
       <div className="weshop-onboarding-ring" style={ringStyle}><SquaresFour size={22} weight="fill" /></div>
@@ -98,7 +104,8 @@ function CanvasOnboarding({ locale, onDismiss, onTimeout }) {
         <p>{zh ? "点击即可边聊边看。" : "Click to create and chat side by side."}</p>
         <button type="button" onClick={onDismiss}>{zh ? "我知道了" : "Got it"}</button>
       </section>
-    </div>
+    </div>,
+    document.body,
   );
 }
 
