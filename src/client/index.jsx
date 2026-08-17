@@ -26,7 +26,10 @@ function SplitPanel({ onExit, initialActionCursor, session, sessionTitle, harnes
   const locale = useHarnessLocale(harnessLocale);
   const setLocale = (next) => harnessLocale.setLocale(next === "zh-CN" ? "zh" : "en");
   return (
-    <div className="weshop-root weshop-split weshop-studio" style={{ position: "fixed", inset: 0, zIndex: 1500, pointerEvents: "auto", overflow: "hidden" }}>
+    // z-index above 1_000_000: dsh-web-ui's retro-OS skins (xp/ths/qq98/trading/miku) pin an
+    // interactive title/status bar to the viewport edges at that z-index; without this the
+    // canvas's own top bar and exit control would render underneath them.
+    <div className="weshop-root weshop-split weshop-studio" style={{ position: "fixed", inset: 0, zIndex: 1000001, pointerEvents: "auto", overflow: "hidden" }}>
       <main className="weshop-canvas-pane">
         <WeshopWorkspace onExit={onExit} onSelectionChange={setSelection} locale={locale} onLocaleChange={setLocale} embedded initialActionCursor={initialActionCursor} />
       </main>
