@@ -20,7 +20,10 @@
 </div>
 
 > [!IMPORTANT]
-> **安装本插件前，必须先安装并成功运行 DeepSeek Harness。** 本仓库是 Harness 插件，不是独立应用。
+> **已适配 DeepSeek Harness v0.1.0-rc.8 及后续版本。** WeShop 已通过 Harness 原生 `dsh plugin` 流程验证，可自动创建 Web profile 并启用插件 bundle。
+
+> [!IMPORTANT]
+> **安装本插件前，请先安装 DeepSeek Harness。** 本仓库是 Harness 插件，不是独立应用。
 
 ## 📖 什么是 WeShop for DeepSeek Harness？
 

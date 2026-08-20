@@ -19,7 +19,10 @@ Describe the result you want in natural language, and watch it appear right next
 </div>
 
 > [!IMPORTANT]
-> **Install and successfully run DeepSeek Harness before installing this plugin.** This repository is a Harness plugin, not a standalone application.
+> **Compatible with DeepSeek Harness v0.1.0-rc.8 and later.** WeShop is verified with Harness's native `dsh plugin` workflow, which creates the Web profile and enables the plugin bundle automatically.
+
+> [!IMPORTANT]
+> **Install DeepSeek Harness before installing this plugin.** This repository is a Harness plugin, not a standalone application.
 
 ## 📖 What is WeShop for DeepSeek Harness?
 
